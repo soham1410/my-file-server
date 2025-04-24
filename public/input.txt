@@ -1,7 +1,5 @@
 A-SEARCH
 
-import heapq
-
 def misplaced_tiles(state, goal):
     return sum(state[i][j] != goal[i][j] and state[i][j] != 0 for i in range(3) for j in range(3))
 
@@ -18,13 +16,15 @@ def get_neighbors(state):
     return neighbors
 
 def a_star_search(initial, goal):
-    heap = []
+    open_list = []
     h = misplaced_tiles(initial, goal)
-    heapq.heappush(heap, (h, 0, h, initial, []))
+    open_list.append((h, 0, h, initial, []))
     visited = set()
 
-    while heap:
-        f, g, h, state, path = heapq.heappop(heap)
+    while open_list:
+        # Manually find and pop the lowest f(n) node
+        open_list.sort()
+        f, g, h, state, path = open_list.pop(0)
         state_tuple = tuple(map(tuple, state))
         if state == goal:
             return path, g, misplaced_tiles(initial, goal), g + misplaced_tiles(initial, goal)
@@ -32,10 +32,12 @@ def a_star_search(initial, goal):
             continue
         visited.add(state_tuple)
         for move, neighbor in get_neighbors(state):
-            if tuple(map(tuple, neighbor)) not in visited:
+            neighbor_tuple = tuple(map(tuple, neighbor))
+            if neighbor_tuple not in visited:
                 new_g = g + 1
                 new_h = misplaced_tiles(neighbor, goal)
-                heapq.heappush(heap, (new_g + new_h, new_g, new_h, neighbor, path + [(move, neighbor, new_g, new_h)]))
+                new_path = path + [(move, neighbor, new_g, new_h)]
+                open_list.append((new_g + new_h, new_g, new_h, neighbor, new_path))
     return None, 0, 0, 0
 
 def print_solution(path, initial, g, h, f):

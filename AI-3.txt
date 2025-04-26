@@ -1,0 +1,16 @@
+GNU PROLOG 
+% Rules
+father(X, Y) :- parent(X, Y), male(X). % X is the father of Y
+mother(X, Y) :- parent(X, Y), female(X). % X is the mother of Y
+siblings(X, Y) :- parent(Z, X), parent(Z, Y), X \= Y, X @< Y. % X and Y share a parent
+siblings_unique(X, Y) :-
+    setof(Y, siblings(X, Y), Sibs),
+    member(Y, Sibs).
+uncle(X, Y) :- parent(Z, Y), siblings(Z, X), male(X). % X is an uncle of Y
+aunt(X, Y) :- parent(Z, Y), siblings(Z, X), female(X). % X is an aunt of Y
+cousins(X, Y) :- parent(Z, X), parent(W, Y), siblings(Z, W). % X and Y are cousins
+grandparent(X, Y) :- parent(X, Z), parent(Z, Y). % X is a grandparent of Y
+
+% Grandfather and Grandmother rules
+grandfather(X, Y) :- father(X, Z), parent(Z, Y). % X is the grandfather of Y
+grandmother(X, Y) :- mother(X, Z), parent(Z, Y). % X is the grandmother of Y

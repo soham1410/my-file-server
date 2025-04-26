@@ -1,0 +1,103 @@
+BFS-DFS
+CODE:
+def dfs(graph, start):
+    visited = []
+    stack = [start]
+    traversal = []
+
+    while stack:
+        node = stack.pop()
+        if node not in visited:
+            visited.append(node)
+            traversal.append(node)
+            print(f"DFS - Current Node: {node}, Closed Nodes: {visited}")
+            for neighbor in reversed(graph[node]):
+                if neighbor not in visited:
+                    stack.append(neighbor)
+
+    print(f"DFS - Complete Traversal: {traversal}")
+    return traversal
+
+def bfs(graph, start):
+    visited = []
+    queue = [start]
+    traversal = []
+
+    while queue:
+        node = queue.pop(0)
+        if node not in visited:
+            visited.append(node)
+            traversal.append(node)
+            print(f"BFS - Current Node: {node}, Closed Nodes: {visited}")
+            for neighbor in graph[node]:
+                if neighbor not in visited:
+                    queue.append(neighbor)
+
+    print(f"BFS - Complete Traversal: {traversal}")
+    return traversal
+
+def input_graph():
+    graph = {}
+    num_nodes = int(input("Enter the number of nodes: "))
+
+    for _ in range(num_nodes):
+        node = input("Enter node: ").strip()
+        neighbors = input(f"Enter neighbors for {node}, separated by spaces: ").strip().split()
+        neighbors = [neighbor.strip() for neighbor in neighbors]
+        graph[node] = neighbors
+
+    return graph
+
+def get_start_node():
+    start = input("Enter the starting node: ")
+    return start
+
+def main():
+    graph = input_graph()
+    start_node = get_start_node()
+    print("\nDFS Traversal:")
+    dfs(graph, start_node)
+    print("\nBFS Traversal:")
+    bfs(graph, start_node)
+
+if __name__ == "__main__":
+    main()
+
+INPUT:
+Enter the number of nodes: 7
+Enter node: A
+Enter neighbors for A, separated by spaces: B D E
+Enter node: B
+Enter neighbors for B, separated by spaces: A C E
+Enter node: C
+Enter neighbors for C, separated by spaces: B E F G
+Enter node: D
+Enter neighbors for D, separated by spaces: A E
+Enter node: E
+Enter neighbors for E, separated by spaces: A B C D F
+Enter node: F
+Enter neighbors for F, separated by spaces: C E G
+Enter node: G
+Enter neighbors for G, separated by spaces: C F
+Enter the starting node: A
+
+OUTPUT:
+DFS Traversal:
+DFS - Current Node: A, Closed Nodes: ['A']
+DFS - Current Node: B, Closed Nodes: ['A', 'B']
+DFS - Current Node: C, Closed Nodes: ['A', 'B', 'C']
+DFS - Current Node: E, Closed Nodes: ['A', 'B', 'C', 'E']
+DFS - Current Node: D, Closed Nodes: ['A', 'B', 'C', 'E', 'D']
+DFS - Current Node: F, Closed Nodes: ['A', 'B', 'C', 'E', 'D', 'F']
+DFS - Current Node: G, Closed Nodes: ['A', 'B', 'C', 'E', 'D', 'F', 'G']
+DFS - Complete Traversal: ['A', 'B', 'C', 'E', 'D', 'F', 'G']
+
+BFS Traversal:
+BFS - Current Node: A, Closed Nodes: ['A']
+BFS - Current Node: B, Closed Nodes: ['A', 'B']
+BFS - Current Node: D, Closed Nodes: ['A', 'B', 'D']
+BFS - Current Node: E, Closed Nodes: ['A', 'B', 'D', 'E']
+BFS - Current Node: C, Closed Nodes: ['A', 'B', 'D', 'E', 'C']
+BFS - Current Node: F, Closed Nodes: ['A', 'B', 'D', 'E', 'C', 'F']
+BFS - Current Node: G, Closed Nodes: ['A', 'B', 'D', 'E', 'C', 'F', 'G']
+BFS - Complete Traversal: ['A', 'B', 'D', 'E', 'C', 'F', 'G']

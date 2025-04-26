@@ -1,0 +1,111 @@
+A-SEARCH 
+CODE:
+def misplaced_tiles(state, goal):
+    return sum(state[i][j] != goal[i][j] and state[i][j] != 0 for i in range(3) for j in range(3))
+
+def get_neighbors(state):
+    x, y = [(i, row.index(0)) for i, row in enumerate(state) if 0 in row][0]
+    moves = {'Up': (-1, 0), 'Down': (1, 0), 'Left': (0, -1), 'Right': (0, 1)}
+    neighbors = []
+    for move, (dx, dy) in moves.items():
+        nx, ny = x + dx, y + dy
+        if 0 <= nx < 3 and 0 <= ny < 3:
+            new_state = [r[:] for r in state]
+            new_state[x][y], new_state[nx][ny] = new_state[nx][ny], new_state[x][y]
+            neighbors.append((move, new_state))
+    return neighbors
+
+def a_star_search(initial, goal):
+    open_list = []
+    h = misplaced_tiles(initial, goal)
+    open_list.append((h, 0, h, initial, []))
+    visited = set()
+
+    while open_list:
+        # Manually find and pop the lowest f(n) node
+        open_list.sort()
+        f, g, h, state, path = open_list.pop(0)
+        state_tuple = tuple(map(tuple, state))
+        if state == goal:
+            return path, g, misplaced_tiles(initial, goal), g + misplaced_tiles(initial, goal)
+        if state_tuple in visited:
+            continue
+        visited.add(state_tuple)
+        for move, neighbor in get_neighbors(state):
+            neighbor_tuple = tuple(map(tuple, neighbor))
+            if neighbor_tuple not in visited:
+                new_g = g + 1
+                new_h = misplaced_tiles(neighbor, goal)
+                new_path = path + [(move, neighbor, new_g, new_h)]
+                open_list.append((new_g + new_h, new_g, new_h, neighbor, new_path))
+    return None, 0, 0, 0
+
+def print_solution(path, initial, g, h, f):
+    p = lambda row: " ".join(str(x) if x else " " for x in row)
+    print("Initial State:")
+    print(f"g(n): {g} | h(n): {h} | f(n): {f}")
+    for row in initial: print(p(row))
+    print("\nSolution Steps:")
+    for move, state, g, h in path:
+        print(f"\nMove: {move} | g(n): {g} | h(n): {h} | f(n): {g + h}")
+        for row in state: print(p(row))
+    print("\nGoal Reached!")
+
+def read_state(prompt):
+    print(prompt)
+    return [list(map(int, input(f"Enter row {i+1} : ").split())) for i in range(3)]
+
+initial = read_state("Enter the Initial State :")
+goal = read_state("\nEnter the Goal State :")
+
+path, g, h, f = a_star_search(initial, goal)
+print_solution(path, initial, g, h, f) if path else print("No solution found.")
+
+INPUT:
+Enter the Initial State :
+Enter row 1 : 1 2 3
+Enter row 2 : 8 0 4
+Enter row 3 : 7 6 5
+Enter the Goal State :
+Enter row 1 : 2 8 1
+Enter row 2 : 0 4 3
+Enter row 3 : 7 6 5
+OUTPUT:
+Solution Steps:
+Move: Up | g(n): 1 | h(n): 5 | f(n): 6
+1   3
+8 2 4
+7 6 5
+Move: Left | g(n): 2 | h(n): 5 | f(n): 7
+  1 3
+8 2 4
+7 6 5
+Move: Down | g(n): 3 | h(n): 5 | f(n): 8
+8 1 3
+  2 4
+7 6 5
+Move: Right | g(n): 4 | h(n): 5 | f(n): 9
+8 1 3
+2   4
+7 6 5
+Move: Right | g(n): 5 | h(n): 4 | f(n): 9
+8 1 3
+2 4  
+7 6 5
+Move: Up | g(n): 6 | h(n): 3 | f(n): 9
+8 1  
+2 4 3
+7 6 5
+Move: Left | g(n): 7 | h(n): 2 | f(n): 9
+8   1
+2 4 3
+7 6 5
+Move: Left | g(n): 8 | h(n): 1 | f(n): 9
+  8 1
+2 4 3
+7 6 5
+Move: Down | g(n): 9 | h(n): 0 | f(n): 9
+2 8 1
+  4 3
+7 6 5
+Goal Reached!

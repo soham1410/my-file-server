@@ -69,21 +69,125 @@ Both rooms are clean. Ending function.
 
 
 GNU PROLOG 
-% Rules
-father(X, Y) :- parent(X, Y), male(X). % X is the father of Y
-mother(X, Y) :- parent(X, Y), female(X). % X is the mother of Y
-siblings(X, Y) :- parent(Z, X), parent(Z, Y), X \= Y, X @< Y. % X and Y share a parent
-siblings_unique(X, Y) :-
-    setof(Y, siblings(X, Y), Sibs),
-    member(Y, Sibs).
-uncle(X, Y) :- parent(Z, Y), siblings(Z, X), male(X). % X is an uncle of Y
-aunt(X, Y) :- parent(Z, Y), siblings(Z, X), female(X). % X is an aunt of Y
-cousins(X, Y) :- parent(Z, X), parent(W, Y), siblings(Z, W). % X and Y are cousins
-grandparent(X, Y) :- parent(X, Z), parent(Z, Y). % X is a grandparent of Y
+% Facts
+male(sam).
+male(akaay).
+male(pam).
+male(agastya).
+male(tam).
+male(virat).
+male(rohit).
+male(hardik).
+male(omy).
 
-% Grandfather and Grandmother rules
-grandfather(X, Y) :- father(X, Z), parent(Z, Y). % X is the grandfather of Y
-grandmother(X, Y) :- mother(X, Z), parent(Z, Y). % X is the grandmother of Y
+female(samaira).
+female(vamika).
+female(anushka).
+female(ritika).
+female(natasha).
+
+% Parent Facts
+parent(akaay, sam). 
+parent(samaira, sam). 
+parent(akaay, omy). 
+parent(samaira, omy). 
+parent(akaay, pam). 
+parent(samaira, pam). 
+parent(agastya, tam). 
+parent(vamika, tam).  
+
+parent(virat, akaay). 
+parent(anushka, akaay). 
+parent(virat, vamika). 
+parent(anushka, vamika). 
+parent(rohit, samaira). 
+parent(ritika, samaira). 
+
+parent(hardik, agastya). 
+parent(natasha, agastya). 
+
+% Rules
+father(X, Y) :- parent(X, Y), male(X).
+mother(X, Y) :- parent(X, Y), female(X).
+siblings(X, Y) :- parent(Z, X), parent(Z, Y), X \= Y.
+brother(X, Y) :- siblings(X, Y), male(X).  
+sister(X, Y) :- siblings(X, Y), female(X). 
+uncle(X, Y) :- parent(Z, Y), siblings(Z, X), male(X).
+aunt(X, Y) :- parent(Z, Y), siblings(Z, X), female(X).
+cousins(X, Y) :- parent(Z, X), parent(W, Y), siblings(Z, W).
+grandparent(X, Y) :- parent(X, Z), parent(Z, Y).
+grandfather(X, Y) :- father(X, Z), parent(Z, Y).
+grandmother(X, Y) :- mother(X, Z), parent(Z, Y).
+
+% AI Experiment Predicate
+ai_exp3 :- 
+    write('AI Experiment 3 is running...'), nl.
+
+OUTPUT:
+GNU Prolog 1.5.0 (64 bits)
+Compiled Jul  8 2021, 12:33:56 with cl
+Copyright (C) 1999-2021 Daniel Diaz
+| ?- change_directory('C:/GNU-Prolog/my_programs').
+yes
+| ?- consult('AI_exp3.pl').
+compiling C:/GNU-Prolog/my_programs/AI_exp3.pl for byte code...
+C:/GNU-Prolog/my_programs/AI_exp3.pl compiled, 51 lines read - 5951 bytes written, 6 ms
+yes
+| ?- ai_exp3.
+AI Experiment 3 is running...
+yes
+| ?- father(X, sam).
+X = akaay ? 
+(15 ms) yes
+| ?- mother(X, tam).
+X = vamika ? 
+yes
+| ?- siblings(X, pam).
+X = sam ? 
+yes
+| ?- grandfather(X, sam).
+X = virat ? 
+(16 ms) yes
+| ?- aunt(X, sam).
+X = vamika ? 
+yes
+| ?- cousins(X, tam).
+X = sam ? 
+yes
+| ?- parent(X, agastya).
+X = hardik ? 
+yes
+| ?- parent(X, agastya).
+X = hardik ? ;
+X = natasha
+yes
+| ?- cousins(X, tam).
+X = sam ? ;
+X = sam ? ;
+X = omy ? 
+yes
+| ?- grandmother(X, pam).
+X = anushka ? ;
+X = ritika ? ;
+no
+| ?- uncle(X, tam).
+X = akaay ? ;
+X = akaay ? 
+yes
+| ?- aunt(X, sam).
+X = vamika ? ;
+X = vamika ? 
+yes
+| ?- siblings(X, pam).
+X = sam ? 
+yes
+| ?- siblings_unique(X, pam).
+X = sam
+yes
+
+
+
+
 
 
 

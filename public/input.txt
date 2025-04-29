@@ -341,7 +341,11 @@ Goal Reached!
 
 
 
+
+
+
 MINIMAX-TIC TAC TOE
+CODE:
 import math
 
 P, O, E = 'X', 'O', '_'
@@ -402,8 +406,25 @@ def main():
 if __name__ == "__main__":
     main()
 
+INPUT:
+Enter your move (row col): 1 1
+Enter your move (row col): 0 2
+Enter your move (row col): 1 0
+Enter your move (row col): 2 2
+
+OUTPUT:
+It's a draw!
+
+
+
+
+
+
+
+
+
 BAYES-BELIEF-NETWORK
-Bayes-belief-network
+CODE:
 # Priors
 P_B, P_E = 0.001, 0.002
 P_notB, P_notE = 1 - P_B, 1 - P_E
@@ -436,44 +457,120 @@ def main():
 
 if __name__ == "__main__":
     main()
+INPUT:
+Welcome to the Burglary Alarm Joint Probability Calculator!
+
+Did a burglary occur? (yes/no): yes
+Did an earthquake occur? (yes/no): no
+Did the alarm sound? (yes/no): yes
+Did John call? (yes/no): yes
+Did Mary call? (yes/no): yes
+
+OUTPUT:
+The joint probability of the observed events is: 0.00059102
+
+
+
+
+
+
 
 
 POP
+CODE:
+import re
 
+# Apply an operator if its preconditions are met
 def apply_operator(state, op):
-    return ((state - op['del_effects']) | op['add_effects'], True) if op['preconditions'].issubset(state) else (state, False)
+    if op['preconditions'].issubset(state):
+        new_state = (state.difference(op['del_effects'])).union(op['add_effects'])
+        return new_state, True
+    return state, False
 
+# Choose an operator that can achieve a given goal
 def achieve_goal(state, goal, operators):
-    return next((op for op in operators if goal in op['add_effects']), None)
+    return next(
+        (op for op in operators if goal in op['add_effects'] and op['preconditions'].issubset(state)),
+        None
+    )
 
+# Optional placeholder for threat resolution
 def resolve_threats(plan):
-    print("Checking for and resolving threats in the plan...")
+    print("\nChecking for and resolving threats in the plan...")
     return plan
 
+# Main planning function
 def plan_steps(init_state, goal_state, operators):
     state, plan = set(init_state), []
-    print("Initial State:", state)
+    print("\nInitial State:", state)
+
     for goal in goal_state:
         if goal not in state:
             op = achieve_goal(state, goal, operators)
             if op:
-                print(f"Applying: {op['name']}")
-                plan.append(op['name'])
+                print(f"\nApplying: {op['name']}")
                 state, ok = apply_operator(state, op)
-                if not ok: print("Failed to apply operator for", goal)
-                print("New State:", state)
+                if ok:
+                    plan.append(op['name'])
+                    print("New State:", state)
+                else:
+                    print("Failed to apply operator for", goal)
+            else:
+                print(f"No operator found to achieve goal: {goal}")
+
     plan = resolve_threats(plan)
-    print("Final Plan (after threat resolution):", plan)
+    print("\nFinal Plan (after threat resolution):", plan)
+
+# Updated parsing to accept names like 'Table'
+def parse_input(prompt):
+    raw = input(prompt)
+    # Match patterns like On(A, B), On(B, Table), Clear(A)
+    return set(re.findall(r'\w+\(\w+(?:,\s?\w+)?\)', raw.strip()))
 
 # Example usage
-parse = lambda s: set(s.replace(" ", "").replace("):", ")").split(','))
-init_state = parse(input("Enter initial state: "))
-goal_state = parse(input("Enter goal state: "))
+if __name__ == "__main__":
+    init_state = parse_input("Enter initial state (e.g. On(B, Table), On(C, A), Clear(B), ...): ")
+    goal_state = parse_input("Enter goal state (e.g. On(A, B), On(B, C), Clear(A), ...): ")
 
-operators = [
-    {'name': 'Move(C, A, Table)', 'preconditions': {'On(C, A)', 'Clear(C)', 'Clear(Table)'}, 'add_effects': {'On(C, Table)', 'Clear(A)'}, 'del_effects': {'On(C, A)'}},
-    {'name': 'Move(B, Table, C)', 'preconditions': {'On(B, Table)', 'Clear(B)', 'Clear(C)'}, 'add_effects': {'On(B, C)', 'Clear(Table)'}, 'del_effects': {'On(B, Table)'}},
-    {'name': 'Move(A, Table, B)', 'preconditions': {'On(A, Table)', 'Clear(A)', 'Clear(B)'}, 'add_effects': {'On(A, B)', 'Clear(Table)'}, 'del_effects': {'On(A, Table)'}}
-]
+    operators = [
+        {
+            'name': 'Move(C, A, Table)',
+            'preconditions': {'On(C, A)', 'Clear(C)', 'Clear(Table)'},
+            'add_effects': {'On(C, Table)', 'Clear(A)'},
+            'del_effects': {'On(C, A)'}
+        },
+        {
+            'name': 'Move(B, Table, C)',
+            'preconditions': {'On(B, Table)', 'Clear(B)', 'Clear(C)'},
+            'add_effects': {'On(B, C)', 'Clear(Table)'},
+            'del_effects': {'On(B, Table)'}
+        },
+        {
+            'name': 'Move(A, Table, B)',
+            'preconditions': {'On(A, Table)', 'Clear(A)', 'Clear(B)'},
+            'add_effects': {'On(A, B)', 'Clear(Table)'},
+            'del_effects': {'On(A, Table)'}
+        }
+    ]
 
-plan_steps(init_state, goal_state, operators)
+    plan_steps(init_state, goal_state, operators)
+
+INPUT:
+Enter initial state (e.g. On(B, Table), On(C, A), Clear(B), ...): On(B, Table), On(A, Table), On(C, A), Clear(C), Clear(B), Clear(Table)
+Enter goal state (e.g. On(A, B), On(B, C), Clear(A), ...): On(A, B), On(B, C), On(C, Table), Clear(A)
+
+OUTPUT:
+Initial State: {'On(C, A)', 'Clear(C)', 'On(A, Table)', 'On(B, Table)', 'Clear(B)', 'Clear(Table)'}
+
+Applying: Move(C, A, Table)
+New State: {'On(C, Table)', 'Clear(C)', 'On(B, Table)', 'On(A, Table)', 'Clear(A)', 'Clear(B)', 'Clear(Table)'}
+
+Applying: Move(B, Table, C)
+New State: {'On(C, Table)', 'Clear(C)', 'On(A, Table)', 'On(B, C)', 'Clear(A)', 'Clear(B)', 'Clear(Table)'}
+
+Applying: Move(A, Table, B)
+New State: {'On(C, Table)', 'Clear(C)', 'On(B, C)', 'On(A, B)', 'Clear(A)', 'Clear(B)', 'Clear(Table)'}
+
+Checking for and resolving threats in the plan...
+
+Final Plan (after threat resolution): ['Move(C, A, Table)', 'Move(B, Table, C)', 'Move(A, Table, B)']

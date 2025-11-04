@@ -1,0 +1,319 @@
+Networking Commands:
+ping www.google.com
+PING (Packet Internet Groper) command is used to check the network connectivity  between host and server/host. This command takes as input the IP address or the URL  and sends a data packet to the specified address with the message “PING” and get a  response from the server/host this time is recorded which is called latency.
+ipconfig
+It displays tons of useful information about the current network settings on the machine such as IPv4 and IPv6 address of all network interface cards (Ethernet adapters, WiFi adapters, virtual network adapters etc), MAC address, default gateway, subnet mask, DNS server, DHCP information etc.
+nslookup
+This command is use to transform the given searched words into their corresponding IP addresses. Such as if i search for a website then our browser don't search for website name. It search's the corresponding IP address associated to the  website. 
+
+tracert www.google.com
+tracert (or traceroute on other operating systems) is a network diagnostic command-line tool used to trace the path of a packet from a source to a destination, displaying each hop (router) along the way and the time it takes for the packet to reach each hop. It helps in identifying potential bottlenecks or points of failure in a network path. 
+
+netstat -r
+netstat is a command-line network utility used to display network 
+connections, routing tables, interface statistics, and more. It's a versatile tool for diagnosing network issues and understanding network activity on a system.
+arp -a
+Address Resolution Protocol of the Data link layer. It is responsible to find the hardware address of a host from a known IP address. There are three basic ARP terms.
+Note: ARP finds the hardware address, also known as the Media Access Control (MAC) address, of a host from its known IP address. ARP is essential in mapping IP addresses to MAC addresses, making it a vital networking concept.
+
+pathping -g host-list
+Provides information about network latency and network loss at intermediate hops between a source and destination. This command sends multiple echo Request messages to each router between a source and destination, over a period of time, and then computes results based on the packets returned from each router.
+hostname
+label that is assigned to a device connected to a computer network and that is used to identify the device in various forms of electronic communication, such as the World Wide Web. Each hostname usually has at least one numeric network address associated with it for routing packets for performance and other reasons.
+getmac
+Returns the media access control (MAC) address and list of network protocols associated with each address for all network cards in each computer, either locally or across a network. This command is particularly useful either when you want to enter the MAC address into a network analyzer, or when you need to know what protocols are currently in use on each network adapter on a computer.
+netsh interface ipv4 show interface
+Netsh is a command-line scripting utility that allows you to display or modify the network configuration of a computer that is currently running. Netsh commands can be run by typing commands at the netsh shell and be used in batch files or scripts. Remote computers and the local computer can be configured by using netsh commands.
+
+
+Nmap:
+1)nmap -T4 -A -v scanme.nmap.org (Intense scan)
+Target specification
+2)nmap -sn localhost (ping scan)
+To determine target availability, Nmap sends an ICMP  echo request (ping), ICMP timestamp request and probes TCP ports 80 and 443. In local  networks, only ARP requests are utilized for host discovery.The ping scanning gives  information about every active IP on your Network. 
+
+3)Pingless Scanning: Pingless scanning in Nmap refers to skipping the host discovery phase, which typically involves sending ICMP echo requests (pings) to determine which hosts are online
+nmap -T4 -A -v nmap scanme.nmap.org
+
+4)OS Scanning: OS detection enables some other tests which make use of information that is gathered during the process anyway. One of these is TCP Sequence Predictability Classification. This measures approximately how hard it is to establish a forged TCP connection against the remote host. It is useful for exploiting source-IP based trust relationships (rlogin, firewall filters, etc) or for hiding the source of an attack.
+sudo -O nmap scanme.nmap.org
+
+5)Quick Scanning: 
+This is a shorthand for a TCP SYN scan, which is a fast method for identifying open TCP ports. It involves sending SYN packets to the target and looking for SYN/ACK responses
+nmap -F scanme.nmap.org
+
+6)Port Scanning: 
+    TCP Connect scan (fallback for non-root users):
+This core Nmap feature detects the status of ports on a target system (open, closed, filtered). It uses various techniques to probe ports and determine their accessibility. 
+nmap -sT scanme.nmap.org
+
+7) Regular Scanning: 
+This likely refers to a standard TCP connect scan using -sT or other TCP scan types. It's a more traditional method that involves establishing a full TCP connection to each port.
+nmap scanme.nmap.org
+
+8)Traceroute: Nmap's traceroute functionality (-tracerouteor -T) maps the path packets take to reach a target host. It identifies intermediate routers and network hops.
+nmap --traceroute scanme.nmap.org
+
+9) Version Scanning: This Nmap feature attempts to identify the specific software versions running on open ports. It can provide more detailed information about the services running on the target system.
+nmap -sV scanme.nmap.org
+
+10) Scan Reports: List scans 
+Before doing any active scans on the target network, we can start by doing a so-called “list scan”. A list scan doesn’t send traffic to any hosts but rather attempts a reverse DNS lookup to determine if a hostname can be found for the target. 
+
+Nmap -sL scanme.nmap.org
+
+
+
+TCP JAVA SOCKET PROGRAMMING
+
+THEORY:
+TCP	
+Connection-oriented
+Reliable (guarantees delivery, order, and error checking)
+Speed Slower (due to error checking and acknowledgment)
+Web browsing, emails, file transfer (HTTP, FTP)	
+
+UDP
+Connectionless
+Unreliable (no guarantee of delivery or order)
+Faster (less overhead)
+Streaming, gaming, voice/video calls (DNS, VoIP)
+.
+.
+Run server 1st then client.
+TCP SEVER CODE:
+
+import java.net.*;
+import java.io.*;
+public class TcpServer {
+  public static void main(String[] args) throws Exception {
+    try (ServerSocket ss = new ServerSocket(6666)) {
+          System.out.println("Server waiting...");
+          Socket s = ss.accept();
+         PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+
+           out.println("Hello Client");
+System.out.println("Client connected: " + s.getInetAddress());
+
+}
+ }
+}
+
+TCP client CODE:
+
+import java.net.*;
+import java.io.*;
+public class TcpClient {
+
+  public static void main(String[] args) throws Exception {
+ try (Socket s = new Socket("127.0.0.1", 6666);
+ BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()))) {
+    System.out.println("Server says: " + in.readLine());
+
+    }
+
+      }
+
+}
+
+UDP SERVER CODE:
+
+import java.net.*;
+
+public class UdpServer {
+ public static void main(String[] args) throws Exception {
+ try (DatagramSocket s = new DatagramSocket(6000)) {
+ System.out.println("UDP Server running...");
+byte[] buf = new byte[1024];
+ while (true) {
+DatagramPacket p = new DatagramPacket(buf, buf.length);
+
+ s.receive(p);
+
+ String msg = new String(p.getData(), 0, p.getLength());
+ System.out.println("From " + p.getAddress() + ": " + msg);
+
+ byte[] out = "Hello Client".getBytes();
+ s.send(new DatagramPacket(out, out.length, p.getAddress(), p.getPort()));
+
+ }
+   }
+ }
+}
+
+
+UDP CLIENT CODE:
+
+import java.net.*;
+public class UdpClient {
+    public static void main(String[] args) throws Exception {
+        try (DatagramSocket s = new DatagramSocket()) {
+            byte[] msg = "Hi".getBytes();
+            InetAddress host = InetAddress.getByName("127.0.0.1");
+            s.send(new DatagramPacket(msg, msg.length, host, 6000));
+            byte[] buf = new byte[1024];
+            DatagramPacket p = new DatagramPacket(buf, buf.length);
+            s.receive(p);
+            System.out.println(new String(p.getData(), 0, p.getLength()));
+
+        }
+    }
+
+}
+
+all incoming packets to the HTTP web server:
+ ip.addr == 45.33.32.156
+monitor outgoing packets from specific system on a network:
+ip.src == 192.168.0.105
+
+
+
+VLAN CODE:
+VLAN
+enable
+config t
+vlan 20
+name sanika
+exit
+vlan 30
+name vedanti
+exit
+int fa0/1
+switchport node access
+switchport access vlan 20
+exit
+int fa0/5
+switchport node access
+switchport access vlan 20
+exit
+int fa0/3
+switchport node access
+switchport access vlan 30
+exit
+int fa0/4
+switchport node access
+switchport access vlan 30
+exit
+
+
+
+FRAMING
+def character_count():
+    cp = input("Enter the Data Stream: ")
+    count = len(cp) + 1
+    d = str(count) + cp
+    print("\nCharacter Count:", d)
+
+def byte_stuffing():
+    d = input("Enter the Data Stream: ")
+    s = "[DLE][STX]"
+    e = "[DLE][ETX]"
+    stuffed = s + d + e
+    print("\nByte Stuffing:", stuffed)
+
+def bit_stuffing():
+    cp = input("Enter the Data Stream: ")
+    d = ''
+    s = '01111110'
+    count = 0
+    for ch in cp:
+        d += ch
+        if ch == '1':
+            count += 1
+            if count == 5:
+                d += '0'
+                count = 0
+        else:
+            count = 0
+    d = s + d + s
+    print("\nBit Stuffing:", d)
+
+def physical_layer_violation():
+    cp = input("Enter Data Stream: ")
+    d = cp[0]
+    for i in range(1, len(cp)):
+        if cp[i] != cp[i-1]:
+            d += 'V'     # mark violation
+        d += cp[i]
+    print("\nPhysical Layer Violation:", d)
+
+def main():
+    while True:
+        print("\n")
+        print("1 Character Count")
+        print("2 Byte Stuffing")
+        print("3 Bit Stuffing")
+        print("4 Physical Layer Violation")
+        print("5 Exit")
+
+        c = int(input("Enter the choice: "))
+        if c == 1:
+            character_count()
+        elif c == 2:
+            byte_stuffing()
+        elif c == 3:
+            bit_stuffing()
+        elif c == 4:
+            physical_layer_violation()
+        elif c == 5:
+            print("\nExit")
+            break
+        else:
+            print("\nInvalid Choice")
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+FILEZILLA THEORY:
+
+FTP (File Transfer Protocol) is important because it allows users to transfer files between computers over a network efficiently. It is commonly used for uploading, downloading, and managing files on remote servers.
+Requirements:
+1. An FTP client (e.g., Auto FTP Manager).
+2. Server details – FTP address, username, and password (or anonymous access).
+
+Modes:
+Active Mode: Server connects back to client for data transfer.
+Passive Mode: Client initiates all connections (better for firewalls).
+
+Advantages:
+ Simple and widely supported
+ Handles large files and resumes transfers
+ Allows remote file management and automation
+
+Disadvantages:
+Insecure (plain text data) → use FTPS/SFTP (FTP secure/SSH file transfer protocol)
+Firewall issues, no integrity check
+Slightly complex for beginners
+
+DHCP PROTOCOL:
+
+enable
+Router#config t
+Router(config)#hostname dhcp-server
+dhcp-server(config)#int f0/0
+dhcp-server(config-if)#ip add 192.168.1.1 255.255.255.0
+dhcp-server(config-if)#no sh
+dhcp-server(config-if)#int f0/1
+dhcp-server(config-if)#ip add 192.168.2.1 255.255.255.0
+dhcp-server(config-if)#no sh
+dhcp-server(config-if)#exit
+dhcp-server(config)#do sh ip int br
+Interface              IP-Address      OK? Method Status                Protocol 
+FastEthernet0/0        192.168.1.1     YES manual up                    up 
+FastEthernet0/1        192.168.2.1     YES manual up                    up 
+Vlan1                  unassigned      YES unset  administratively down down
+dhcp-server(config)#ip dhcp excluded-address 192.168.1.1
+dhcp-server(config)#ip dhcp excluded-address 192.168.2.1
+dhcp-server(config)#ip dhcp pool 192.168.1.1
+dhcp-server(dhcp-config)#network 192.168.1.0 255.255.255.0
+dhcp-server(dhcp-config)#default-router 192.168.1.1
+dhcp-server(dhcp-config)#dns-server 8.8.8.8
+dhcp-server(dhcp-config)#ip dhcp pool 192.168.2.1
+dhcp-server(dhcp-config)#network 192.168.2.0 255.255.255.0
+dhcp-server(dhcp-config)#default-router 192.168.2.1
+dhcp-server(dhcp-config)#dns-server 8.8.8.8
+dhcp-server(dhcp-config)#exit
+

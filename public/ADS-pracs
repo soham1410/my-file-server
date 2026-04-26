@@ -1,0 +1,366 @@
+1. Implement Descriptive Statistics
+DATASET:-https://www.kaggle.com/datasets/ehababoelnaga/anemia-types-classification
+
+EXCEL 
+Measures of Central Tendency
+Mean: =AVERAGE(A2:A1282)
+Median: =MEDIAN(A2:A1282)
+Mode: =MODE.SNGL(A2:A1282)
+
+Measures of Dispersion (Variability)
+Standard Deviation: =STDEV.S(A2:A1282)
+Variance: =VAR.S(A2:A1282)
+Range: =MAX(A2:A1282)-MIN(A2:A1282)
+Interquartile Range (IQR): =QUARTILE.INC(A2:A1282, 3)-QUARTILE.INC(A2:A1282, 1)
+
+TABLEAU
+Phase 1: Load the Dataset
+1. Open Tableau and connect to Text file.
+2. Open diagnosed_cbc_data_v4.csv and go to Sheet 1.
+
+Phase 2: Disaggregate the Data (Crucial Step)
+1. Go to the top menu bar and click "Analysis".
+2. Uncheck "Aggregate Measures" to plot individual patient data points instead of sums.
+
+Phase 3: Build Goal 1 (Detailed View - Individual Axes)
+1. Drag "Measure Names" to the Rows shelf.
+2. Drag "Measure Values" to the Columns shelf.
+3. Use the Filter card to keep only blood parameters (WBC, RBC, HGB, PLT, etc.).
+
+Phase 4: Build Goal 2 (Magnitude View - Shared Axis)
+1. Create a New Worksheet.
+2. Ensure "Analysis" > "Aggregate Measures" is still unchecked.
+3. Drag "Measure Names" to the Columns shelf.
+4. Drag "Measure Values" to the Rows shelf.
+5. Filter for blood parameters only.
+
+Phase 5: Formatting (Apply to both sheets)
+1. In the Marks card, change the dropdown from "Automatic" to "Circle".
+2. Click "Color" in the Marks card and reduce Opacity to 50% to show data density.
+3. Drag "Measure Names" onto the Color box to assign different colors to each parameter.
+
+
+
+2. Implement Inferential Statistic
+DATASET:-https://www.kaggle.com/datasets/uom190346a/sleep-health-and-lifestyle-dataset
+Excel 
+
+Part A: Two-Sample T-Test (Unequal Variances)
+
+1. Go to Data → Data Analysis.
+2. Select t-Test: Two-Sample Assuming Unequal Variances.
+3. Select:
+   - Variable 1 Range → First dataset column
+   - Variable 2 Range → Second dataset column
+4. Set:
+   - Hypothesized Mean Difference = 0
+   - Alpha = 0.05
+   - Check Labels (if headers exist)
+5. Choose New Worksheet Ply and click OK.
+
+Part B: Chi-Square Goodness-of-Fit Test
+
+1. Create columns: BMI Category, Observed, Expected, (O−E)²/E.
+
+2. Observed Values:
+   =COUNTIF(data_range, category)
+
+3. Expected Values:
+   =SUM(observed_range) / number_of_categories
+
+4. Chi-Square Calculation:
+   =(Observed - Expected)^2 / Expected
+
+5. Final Results:
+   - Chi-Square Statistic:
+     =SUM(calculated_values)
+   - P-Value:
+     =CHISQ.TEST(observed_range, expected_range)
+
+
+3. Implement Data Cleaning Techniques Excel/R
+DATASET:-https://www.kaggle.com/datasets/ahmedmohamed2003/retail-store-sales-dirty-for-data-cleaning
+EXCEL (Measures of Central Tendency)
+1. Open the .csv file.
+2. Numerical (Mean): Fill empty 'Price Per Unit', 'Quantity', and 'Total Spent' cells using: 
+   	Formula to find mean of Price Per Unit
+		=IF(ISBLANK(E2), AVERAGE(E:E), E2)
+	Formula to find mean of Quantity
+		=IF(ISBLANK(F2), AVERAGE(F:F), F2)
+	Formula to find mean of Total Spent
+		=AVERAGE(G2:G12576)
+	Formula to find mode of Item
+		=IF(ISBLANK(D2),INDEX($D$2:$D$12576,MODE(IF($D$2:$D$12576<>"",MATCH($D$2:$D$12576, $D$2:$D$12576, 0)))), D2)
+	Formula to find mode of Discount Applied
+	=IF(ISBLANK(K2),INDEX($K$2:$K$12576,MODE(IF($K$2:$K$12576<>"",MATCH($K$2:$K$12576, $K$2:$K$12576, 0)))), K2)
+3. Categorical (Mode): Fill empty 'Item' and 'Discount Applied' cells using:
+   =INDEX(A:A, MATCH(MAX(COUNTIF(A:A, A:A)), COUNTIF(A:A, A:A), 0))
+4. Save as "retail_sales_excel_cleaned.csv".
+
+RSTUDIO (Categorical Relationships & Algebra)
+1. Set Working Directory to your data folder.
+2. Run the R script provided below.
+CODE:
+# 1. Load the package (It is already installed now!)
+library(dplyr)
+
+# 2. Load the dataset
+df <- read.csv("retail_store_sales.csv", check.names = FALSE, stringsAsFactors = FALSE)
+
+# 3. Destroy hidden spaces: convert all blanks and "NaN" text to true NA
+df[df == "" | df == " " | df == "NaN" | df == "null"] <- NA
+
+# 4. Custom Mode function for exact lookups
+get_mode <- function(v) {
+  v_clean <- na.omit(v)
+  if(length(v_clean) == 0) return(NA)
+  uniqv <- unique(v_clean)
+  uniqv[which.max(tabulate(match(v_clean, uniqv)))]
+}
+
+# 5. The Deterministic (Algebraic) Cleaning Pipeline
+df_cleaned <- df %>%
+  
+  # --- FIXING TEXT ---
+  group_by(Category) %>%
+  mutate(Item = ifelse(is.na(Item), get_mode(Item), Item)) %>%
+  ungroup() %>%
+  
+  group_by(Location) %>%
+  mutate(`Discount Applied` = ifelse(is.na(`Discount Applied`), get_mode(`Discount Applied`), `Discount Applied`)) %>%
+  ungroup() %>%
+  
+  # --- FIXING NUMBERS: EXACT LOOKUPS & ALGEBRA ---
+  group_by(Item) %>%
+  mutate(`Price Per Unit` = ifelse(is.na(`Price Per Unit`), get_mode(`Price Per Unit`), `Price Per Unit`)) %>%
+  ungroup() %>%
+  
+  mutate(
+    Quantity = ifelse(
+      is.na(Quantity) & !is.na(`Total Spent`) & !is.na(`Price Per Unit`), 
+      round(`Total Spent` / `Price Per Unit`), 
+      Quantity
+    ),
+    `Total Spent` = ifelse(
+      is.na(`Total Spent`) & !is.na(Quantity) & !is.na(`Price Per Unit`), 
+      `Price Per Unit` * Quantity, 
+      `Total Spent`
+    )
+  )
+
+# 6. Save the perfectly calculated dataset
+write.csv(df_cleaned, "retail_sales_algebraic_cleaned.csv", row.names = FALSE)
+
+# 7. Print Success Message
+print("SUCCESS: Data cleaned using exact lookups and algebra! Saved as retail_sales_algebraic_cleaned.csv")
+
+3. This script uses grouping to fill text based on Category/Location and algebra to solve for missing numbers.
+4. Verify the output file "retail_sales_rstudio_cleaned.csv".
+
+
+
+4. 5. & 6. 
+Task 4: Univariate Visualization (1 Variable)
+Histogram: Drag a numerical measure to Columns. Click the "Show Me" panel in the top right and select the Histogram icon. This shows the distribution of a single numerical variable.
+Bar Chart: Drag a categorical dimension to Columns and the generated Count (or a measure you want to aggregate) to Rows.
+Pie Chart: Drag a dimension to Color on the Marks card, and a measure to Angle.
+
+Task 5: Bivariate Visualization (2 Variables)
+Scatter Plot: Drag one numerical measure to Columns and another to Rows. Uncheck "Aggregate Measures" in the Analysis menu to see individual data points.
+Line Chart: Drag a Date dimension to Columns and a numerical measure to Rows.
+Side-by-Side Bar Chart: Drag a dimension to Columns, another dimension next to it in Columns, and a measure to Rows.
+
+Task 6: Multivariate Visualization (3+ Variables)
+Color-coded Scatter Plot: Create a standard scatter plot (2 measures), then drag a categorical dimension to Color on the Marks card.
+Bubble Chart: Take your color-coded scatter plot and drag a third numerical measure to Size on the Marks card.
+Trellis Chart (Small Multiples): Drag measures to Rows and Columns, then drag a dimension to the Columns shelf before the measure to split the graph into a grid based on that category.
+
+
+
+7. Implement Time Forecasting Any One Method 
+DATASET:-https://www.kaggle.com/code/georgyzubkov/daily-climate-in-delhi-arima-with-timeseries
+Excel
+STEP 1:Ensure your data has two columns: one for Dates/Times (with consistent intervals) and one for the corresponding numerical values.
+STEP 2:Select both columns.
+STEP 3:Go to the Data tab on the ribbon.
+STEP 4:Click on Forecast Sheet (in the Forecast group).
+STEP 5:A preview will appear showing the historical data and the forecasted trend with confidence intervals. You can adjust the "Forecast End" date.
+STEP 6:Click Create. Excel will generate a new worksheet with a chart and the calculated forecast values.
+
+
+
+
+8. Implement Karl Pearson Correlation
+DATASET:-https://www.kaggle.com/datasets/ehababoelnaga/anemia-types-classification
+	=PEARSON(A2:A1282, F2:F1282)
+9. Implement Kurtosis
+DATASET:-https://www.kaggle.com/datasets/ehababoelnaga/anemia-types-classification
+	=KURT(A2:A1282)
+
+
+
+10.Implement Outlier Detection Using Statistics
+DATASET:- https://www.kaggle.com/code/mohaiminul101/video-game-sales
+EXCEL
+Implementation steps for Outlier Detection (Z-Score Method):
+1. Calculate the Mean: 
+	In an empty cell, calculate the average of your target data.
+	Formula: =AVERAGE([Target Data Range])
+	* Let's refer to this cell as [Mean Cell].
+
+2. Calculate the Standard Deviation: 
+	In another empty cell, calculate the sample standard deviation.
+	Formula: =STDEV.S([Target Data Range])
+	* Let's refer to this cell as [StdDev Cell].
+
+3. Calculate Z-Scores: 
+	Create a new column next to your data called "Z-Score". For the first data point, enter the formula below, ensuring you lock the Mean and StdDev cells with dollar signs ($) for 	absolute referencing.
+	Formula: =([First Data Cell] - $[Mean Cell]) / $[StdDev Cell]
+	*Drag this formula down to fill all rows.
+
+4. Flag Outliers: 
+	Create another new column called "Outlier Status". For the first data point, enter the formula below to automatically flag anomalies based on a threshold of 3 standard deviations.
+	Formula: =IF(ABS([First Z-Score Cell])>3, "Outlier", "Normal")
+	* Drag this formula down to fill all rows. 
+	* Use the filter tool on this column to view only the "Outlier" rows.
+
+
+
+11.Implement Bowley Coefficient Of Skewness
+DATASET:-https://www.kaggle.com/datasets/ehababoelnaga/anemia-types-classification
+=(QUARTILE.INC(A2:A1282, 3) + QUARTILE.INC(A2:A1282, 1) - 2*QUARTILE.INC(A2:A1282, 2)) / (QUARTILE.INC(A2:A1282, 3) - QUARTILE.INC(A2:A1282, 1))
+12.Implement Karl Pearson’s Coefficient Of Skewness
+DATASET:-https://www.kaggle.com/datasets/ehababoelnaga/anemia-types-classification
+=3*(AVERAGE(A2:A1282) - MEDIAN(A2:A1282)) / STDEV.S(A2:A1282)
+13.Implement Spearman Correlation Coefficient
+DATASET:-https://www.kaggle.com/datasets/ehababoelnaga/anemia-types-classification
+Step 1: Rank the first variable (WBC)
+	=RANK.AVG(A2, $A$2:$A$1282, 1) *A=any empty column
+Step 2: Rank the second variable (RBC)
+	=RANK.AVG(F2, $F$2:$F$1282, 1) *F= another empty column
+Step 3: Calculate the Correlation of the Ranks
+	=CORREL(P2:P1282, Q2:Q1282)
+
+
+
+14.Implement Smote Method-Online MATLAB
+MATLAB CODE:
+% ---------------- LOAD DATA ----------------
+data = readtable('WA_Fn-UseC_-Telco-Customer-Churn.csv');
+
+% ---------------- REMOVE ID COLUMN ----------------
+if ismember('customerID', data.Properties.VariableNames)
+    data.customerID = [];
+end
+
+% ---------------- FIX TotalCharges ----------------
+if ismember('TotalCharges', data.Properties.VariableNames)
+    if iscell(data.TotalCharges) || isstring(data.TotalCharges)
+        data.TotalCharges = string(data.TotalCharges);
+        data.TotalCharges(data.TotalCharges == " " | data.TotalCharges == "") = "0";
+        data.TotalCharges = str2double(data.TotalCharges);
+    end
+end
+
+% Remove missing values
+data = rmmissing(data);
+
+% ---------------- ENCODE CATEGORICAL VARIABLES ----------------
+for i = 1:width(data)
+    if ~isnumeric(data.(i))
+        data.(i) = grp2idx(categorical(data.(i)));
+    end
+end
+
+% ---------------- SEPARATE FEATURES & TARGET ----------------
+X = data{:,1:end-1};
+y = data{:,end};
+
+% ---------------- DISPLAY ORIGINAL DISTRIBUTION ----------------
+disp("Before SMOTE:");
+tabulate(y)
+
+% ---------------- SMOTE FUNCTION ----------------
+function [X_new, y_new] = simple_smote(X, y, k)
+
+    % Find minority class
+    classes = unique(y);
+    counts = histc(y, classes);
+    [~, idx] = min(counts);
+    minority_class = classes(idx);
+
+    majority_class = classes(classes ~= minority_class);
+
+    X_min = X(y == minority_class, :);
+    X_maj = X(y == majority_class, :);
+
+    n_min = size(X_min,1);
+    n_maj = size(X_maj,1);
+
+    % Number of synthetic samples needed
+    n_to_generate = n_maj - n_min;
+
+    % Find neighbors
+    neighbors = knnsearch(X_min, X_min, 'K', k+1);
+
+    synthetic = [];
+
+    % Generate only required samples
+    for i = 1:n_to_generate
+        idx_i = randi(n_min);
+        nn = neighbors(idx_i, randi([2 k+1]));
+
+        diff = X_min(nn,:) - X_min(idx_i,:);
+        gap = rand(1, size(X,2));
+
+        synthetic_point = X_min(idx_i,:) + gap .* diff;
+        synthetic = [synthetic; synthetic_point];
+    end
+
+    % Combine
+    X_new = [X; synthetic];
+    y_new = [y; repmat(minority_class, size(synthetic,1),1)];
+end
+% ---------------- APPLY SMOTE ----------------
+[X_sm, y_sm] = simple_smote(X, y, 5);
+
+% ---------------- DISPLAY AFTER SMOTE ----------------
+disp("After SMOTE:");
+tabulate(y_sm)
+
+% ---------------- PLOTS ----------------
+
+% Adjust indices if needed based on dataset
+tenure = X(:,1);
+monthly = X(:,end);
+
+figure;
+gscatter(tenure, monthly, y);
+title('Before SMOTE');
+xlabel('Tenure');
+ylabel('Monthly Charges');
+
+figure;
+tenure_sm = X_sm(:,1);
+monthly_sm = X_sm(:,end);
+
+gscatter(tenure_sm, monthly_sm, y_sm);
+title('After SMOTE');
+xlabel('Tenure');
+ylabel('Monthly Charges');
+
+
+
+
+15.Linear Regression & Performance Evaluation
+WEKA
+1.Load Data: Open Weka Explorer and click Open file... to load your dataset (CSV or ARFF format).
+2. Select the Model: Navigate to the Classify tab.
+3. Click the Choose button under the Classifier section.
+4. Expand the functions folder and select LinearRegression.
+5. Set Target Variable: Just above the "Start" button, use the dropdown menu to select your target (dependent) variable.
+6.Click Start.
+7.Evaluate Performance: Look at the "Classifier output" panel on the right. Weka will display the linear regression equation and the crucial evaluation metrics, including:
+8.Correlation coefficient (R): Measures how strong the relationship is (closer to 1 or -1 is better).
+9.Mean absolute error (MAE): The average absolute difference between predicted and actual values.
+10.Root mean squared error (RMSE): Similar to MAE but penalizes larger errors more heavily.

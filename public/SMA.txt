@@ -1,0 +1,183 @@
+CLEANING
+
+import pandas as pd
+# load dataset (Tweets.csv from Kaggle)
+df = pd.read_csv("Tweets.csv")
+# keep only required columns and rename
+df = df[["text", "airline_sentiment"]].rename(columns={"airline_sentiment": "sentiment"})
+# cleaning
+df["text"] = (
+    df["text"]
+    .str.lower()
+    .str.replace(r"http\S+|www\S+", "", regex=True)
+    .str.replace(r"@\w+|#", "", regex=True)
+    .str.replace(r"[^a-z\s]", "", regex=True)
+    .str.replace(r"\s+", " ", regex=True)
+    .str.strip()
+)
+# remove nulls and duplicates
+df = df.dropna().drop_duplicates(subset="text")
+print(df.head())
+# save cleaned data
+df.to_csv("cleaned_airline_sentiment.csv", index=False)
+
+
+
+
+COMPARITIVE ANALYSIS
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from textblob import TextBlob
+import re
+
+# load dataset
+df = pd.read_csv("Reviews.csv")
+
+# take small sample
+reviews = df["Text"].dropna().astype(str).head(2000)
+
+# clean
+def clean(t):
+    t = re.sub(r"http\S+|[^a-zA-Z ]", "", t)
+    return t.lower()
+
+reviews = [clean(t) for t in reviews]
+
+# sentiment
+def get_sentiment(t):
+    s = TextBlob(t).sentiment.polarity
+    return "Positive" if s>0 else "Negative" if s<0 else "Neutral"
+
+result = {"Positive":0,"Negative":0,"Neutral":0}
+
+for r in reviews:
+    result[get_sentiment(r)] += 1
+
+print(result)
+
+# graph
+pd.Series(result).plot(kind="bar")
+plt.title("Sentiment Analysis")
+plt.xlabel("Sentiment")
+plt.ylabel("Count")
+plt.show()
+
+
+
+
+
+VIS AND EXPL
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+# load dataset Students Performance in Exams
+df = pd.read_csv("exam_scores.csv")
+print(df.head())
+# ---------------- EDA ----------------
+print("Shape:", df.shape)
+print("Data Types:\n", df.dtypes)
+print("Mean:\n", df.mean(numeric_only=True))
+print("Median:\n", df.median(numeric_only=True))
+print("Mode:\n", df.mode().iloc[0])
+print("Variance:\n", df.var(numeric_only=True))
+print("Std Dev:\n", df.std(numeric_only=True))
+print("Min:\n", df.min(numeric_only=True))
+print("Max:\n", df.max(numeric_only=True))
+print("Missing:\n", df.isnull().sum())
+corr = df.corr(numeric_only=True)
+
+# ---------------- Plots ----------------
+# Histogram
+plt.hist(df["math"], bins=20)
+plt.title("Math Score Distribution")
+plt.show()
+# Boxplot
+sns.boxplot(x=df["math"])
+plt.title("Math Boxplot")
+plt.show()
+# Scatter
+plt.scatter(df["math"], df["reading"])
+plt.title("Math vs Reading")
+plt.show()
+# Line
+plt.plot(df["math"].head(50))
+plt.title("Math Trend")
+plt.show()
+# Bar
+means = df.mean(numeric_only=True)
+means.plot(kind="bar")
+plt.title("Average Scores")
+plt.show()
+# Pie
+means.plot(kind="pie", autopct="%1.1f%%")
+plt.title("Score Share")
+plt.ylabel("")
+plt.show()
+# Heatmap
+sns.heatmap(corr, annot=True)
+plt.title("Correlation")
+plt.show()
+# Violin
+sns.violinplot(data=df)
+plt.title("Score Distribution")
+plt.show()
+# Pairplot
+sns.pairplot(df)
+plt.show()
+# Countplot (create category)
+df["level"] = pd.cut(df["math"], bins=[0,50,70,100], labels=["Low","Medium","High"])
+sns.countplot(x=df["level"])
+plt.title("Math Level Count")
+plt.show()
+print("Done")
+
+
+
+WEB SCRAPING
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+url = "http://books.toscrape.com/"
+res = requests.get(url)
+soup = BeautifulSoup(res.text, "html.parser")
+
+books = soup.select("article.product_pod")
+
+data = [(b.h3.a["title"], 
+         b.select_one("p.price_color").text)
+        for b in books]
+
+df = pd.DataFrame(data, columns=["Book", "Price"])
+print(df)
+
+df.to_csv("books.csv", index=False)
+
+
+WORDCLOUD
+import pandas as pd
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud, STOPWORDS
+import string
+# load dataset Fake and real new dataset
+df = pd.read_csv("Fake.csv")
+# handle missing
+df["title"] = df["title"].fillna("")
+df["text"] = df["text"].fillna("")
+# combine text
+text = " ".join((df["title"] + " " + df["text"]).tolist()).lower()
+# clean text
+for ch in string.punctuation:
+    text = text.replace(ch, " ")
+
+words = [w for w in text.split() if w not in STOPWORDS and len(w) > 3]
+clean_text = " ".join(words)
+# wordcloud
+wc = WordCloud(width=800, height=400, background_color="white").generate(clean_text)
+plt.imshow(wc)
+plt.axis("off")
+plt.title("Word Cloud")
+plt.show()
+

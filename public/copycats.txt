@@ -1,0 +1,1155 @@
+﻿YACC
+/* calc.l */ (FLEX File)
+%{
+#include "calc.tab.h"
+#include <stdlib.h>
+%}
+
+
+%%
+
+
+[0-9]+     { yylval = atoi(yytext); return NUMBER; }
+
+
+[+\-*/()]  { return yytext[0]; }
+
+
+\n         { return '\n'; }
+
+
+[ \t]      ;
+
+
+.          ;
+
+
+%%
+
+
+int yywrap()
+{
+    return 1;
+}
+
+
+
+
+/* calc.y */ (BISON/YACC File)
+
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+
+
+int yylex();
+void yyerror(const char *s);
+%}
+
+
+%token NUMBER
+
+
+%left '+' '-'
+%left '*' '/'
+%left '(' ')'
+
+
+%%
+
+
+input:
+      input line
+    | line
+    ;
+
+
+line:
+      '\n'
+    | exp '\n'   { printf("Result = %d\n", $1); }
+    ;
+
+
+exp:
+      NUMBER             { $$ = $1; }
+    | exp '+' exp        { $$ = $1 + $3; }
+    | exp '-' exp        { $$ = $1 - $3; }
+    | exp '*' exp        { $$ = $1 * $3; }
+    | exp '/' exp        { $$ = $1 / $3; }
+    | '(' exp ')'        { $$ = $2; }
+    ;
+
+
+%%
+
+
+void yyerror(const char *s)
+{
+    printf("Invalid Expression\n");
+}
+
+
+int main()
+{
+    printf("Enter arithmetic expression:\n");
+    yyparse();
+    return 0;
+}
+
+
+
+
+—---------------------------------------------------------------------------------------------------------------------
+1)Lex Program to Check String of Length 3 Starting with ‘A’ 
+%option noyywrap
+
+
+%{
+#include <stdio.h>
+%}
+
+
+%%
+
+
+A[a-z]{2}        { printf("String has length 3 and starts with A \n"); }
+
+
+[a-z]*|A[a-z]* { printf("String not correct "); }
+
+
+%%
+
+
+int main()
+{
+    printf("Enter the string:\n");
+    yylex();
+    return 0;
+}
+
+
+2. Lex Program to Check if a String Ends with “abb” 
+—-------------------------------------
+%option noyywrap
+
+
+%{
+#include <stdio.h>
+%}
+
+
+%%
+
+
+[a-zA-Z]+abb     { printf("String ends with abb.\n"); }
+
+
+[a-zA-Z]+        { printf("String doesn't end with abb.\n"); }
+
+
+%%
+
+
+int main()
+{
+    printf("Enter the string:\n");
+    yylex();
+    return 0;
+}
+3. Lex Program to Add Two Numbers 
+—-----------------------------------
+%option noyywrap
+
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+
+
+int num1, num2;
+%}
+
+
+%%
+
+
+[0-9]+ {
+    num1 = atoi(yytext);
+    scanf("%d", &num2);
+    printf("Sum = %d\n", num1 + num2);
+}
+
+
+[ \t\n]+   ;
+
+
+.          ;
+
+
+%%
+
+
+int main()
+{
+    printf("Enter the two numbers:\n");
+    yylex();
+    return 0;
+}
+
+
+4. Lex Program to Count Uppercase and Lowercase Tokens 
+—-------------------------
+%option noyywrap
+%{
+#include <stdio.h>
+int CU=0,CL=0;
+%}
+%%
+[A-Z]+                  { CU++; }
+
+
+[a-z]+                  { CL++; }
+
+
+[ \t\n]+                ;
+
+
+[0-9]+                  ;
+
+
+.                       ;
+%%
+
+
+int main()
+{
+    printf("Enter the input:\n");
+    yylex();
+
+
+    printf("Number of uppercase token  s = %d\n", CU);
+    printf("Number of lowercase tokens = %d\n", CL);
+
+
+    return 0;
+}
+
+
+5.Lex Program to Check Whether a Number is Even or Odd 
+—---------------------------
+%option noyywrap
+%{
+#include <stdio.h>
+int a;
+%}
+
+
+%% 
+[0-9]+ { a = atoi(yytext);
+            if(a%2==0)
+                printf("%d is even ",a);
+            else 
+                printf("%d is odd ",a);
+        }
+%%
+int main()
+{
+    yylex();
+    return 0;
+    
+}
+
+
+6. Lex Program to Identify Keywords 
+—-----------------
+%option noyywrap
+%{
+#include <stdio.h>
+
+
+%}
+key "int"|"float"|"printf"
+%%
+{key} {printf("%s is a keyword\n",yytext);}
+[a-zA-Z]*[A-Z][a-zA-Z]*    ;
+[0-9]+                     ;
+[ \t\n]+                   ;
+.                          ;
+%%
+
+
+int main()
+{
+    printf("Enter the input:\n");
+    yylex();
+    return 0;
+}
+
+
+7. Lex Program to Count Tokens Containing Uppercase Letters 
+—-----------
+%option noyywrap
+%{
+#include <stdio.h>
+int count = 0;
+%}
+
+
+%%
+[a-zA-Z]*[A-Z][a-zA-Z]*    { count++; }
+[0-9]+                     ;
+[ \t\n]+                   ;
+.                          ;
+%%
+
+
+int main()
+{
+    printf("Enter the input:\n");
+    yylex();
+
+
+    printf("Number of tokens with uppercase characters = %d\n", count);
+    return 0;
+}
+—--------
+8. Python Program to Convert 3-Address Code into Quadruples and Triples 
+
+
+def parse_3ac(statement):
+    # Remove extra spaces
+    statement = statement.replace(" ", "")
+
+
+    # Split into result and expression
+    parts = statement.split('=')
+    result = parts[0]
+    expr = parts[1]
+
+
+    # Operators to check
+    operators = ['+', '-', '*', '/', '%']
+
+
+    op = ''
+    arg1 = ''
+    arg2 = ''
+
+
+    # Find operator inside expression
+    for operator in operators:
+        if operator in expr:
+            op = operator
+            arg1, arg2 = expr.split(operator)
+            break
+
+
+    # If no operator found (simple assignment)
+    if op == '':
+        op = '='
+        arg1 = expr
+        arg2 = ''
+
+
+    return {
+        'op': op,
+        'arg1': arg1,
+        'arg2': arg2,
+        'result': result
+    }
+
+
+
+
+def main():
+    n = int(input("Enter number of 3AC statements: "))
+    statements = []
+
+
+    for i in range(n):
+        stmt = input(f"Enter 3AC statement #{i+1}: ")
+        statements.append(parse_3ac(stmt))
+
+
+    # Quadruples
+    print("\n--- Quadruples ---")
+    print(f"{'Op':<7}{'Arg1':<10}{'Arg2':<10}{'Result':<10}")
+
+
+    for q in statements:
+        print(f"{q['op']:<7}{q['arg1']:<10}{q['arg2']:<10}{q['result']:<10}")
+
+
+    # Triples
+    print("\n--- Triples ---")
+    print(f"{'Index':<7}{'Op':<7}{'Arg1':<10}{'Arg2':<10}")
+
+
+    for i, t in enumerate(statements):
+        print(f"{i:<7}{t['op']:<7}{t['arg1']:<10}{t['arg2']:<10}")
+
+
+
+
+if __name__ == "__main__":
+    main()
+—--------------------------—--------------------------
+—--------------------------
+—--------------------------
+
+
+Expr to 3AC
+p = {'+': 1, '-': 1, '*': 2, '/': 2}
+t = 1
+code = []
+
+
+
+
+def temp():
+   global t
+   x = "t" + str(t)
+   t += 1
+   return x
+
+
+
+
+def postfix(exp):
+   s = []
+   out = []
+
+
+   for ch in exp:
+       if ch.isalnum():
+           out.append(ch)
+
+
+       elif ch == '(':
+           s.append(ch)
+
+
+       elif ch == ')':
+           while s[-1] != '(':
+               out.append(s.pop())
+           s.pop()
+
+
+       else:
+           while s and s[-1] != '(' and p[ch] <= p.get(s[-1], 0):
+               out.append(s.pop())
+           s.append(ch)
+   while s:
+       out.append(s.pop())
+
+
+   return out
+
+
+
+
+def tac(post):
+   s = []
+
+
+   for ch in post:
+       if ch.isalnum():
+           s.append(ch)
+       else:
+           b = s.pop()
+           a = s.pop()
+           x = temp()
+           code.append((x, a, ch, b))
+           s.append(x)
+
+
+   return s.pop()
+
+
+
+
+exp = input("Enter expression (x=(a+b)*c): ")
+l, r = exp.split('=')
+
+
+post = postfix(r)
+res = tac(post)
+
+
+code.append((l, res, '=', ''))
+
+
+print("\nThree Address Code")
+for i in code:
+   if i[2] == '=':
+       print(i[0], "=", i[1])
+   else:
+       print(i[0], "=", i[1], i[2], i[3])
+
+
+—--------------------------—--------------------------—--------------------------
+
+
+
+
+9.assembly code generation
+
+
+import re
+def generate_code(statements):
+   regs = {'R0': None, 'R1': None}
+   addrs = {}
+   ops = {'+': 'ADD', '-': 'SUB', '*': 'MUL', '/': 'DIV'}
+  
+   print("\n" + "=" * 50 + "\nCODE GENERATION TRACE\n" + "=" * 50)
+  
+   for i, stmt in enumerate(statements):
+       #  1: 1-line Regex Unpacking (Handles spaces automatically!)
+       x, y, op, z = re.match(r'(\w+)\s*=\s*(\w+)\s*([\+\-\*/])\s*(\w+)', stmt).groups()
+       code = []
+      
+       #  2: 1-line Register Allocation using next()
+       rx = addrs.get(y)
+       if not rx or not rx.startswith('R'):
+           rx = next((r for r, v in regs.items() if v is None), 'R0')
+           code.append(f"MOV {y}, {rx}")
+      
+       # Generate Instruction
+       code.append(f"{ops[op]} {addrs.get(z, z)}, {rx}")
+      
+       # Update Descriptors
+       if regs[rx]: addrs.pop(regs[rx], None)
+       regs[rx], addrs[x] = x, rx
+      
+       #  1-line Dictionary Filtering for Final Write-back Cleanup
+       if i == len(statements) - 1:
+           code.append(f"MOV {rx}, {x}")
+           addrs[x] = f"{rx} and memory"
+           regs = {r: (v if r == rx else None) for r, v in regs.items()}
+           addrs = {k: v for k, v in addrs.items() if v.startswith(rx)}
+          
+       # Print output formatting natively
+       print(f"Statement: {stmt}\nCode Generated:\n" + "\n".join(code))
+       print("Register Descriptor:\n" + "\n".join(f"{r} contains {v}" for r, v in regs.items() if v))
+       print("Address Descriptor:\n" + "\n".join(f"{k} in {v}" for k, v in addrs.items() if v))
+       print("-" * 50)
+
+
+if __name__ == "__main__":
+   print("Enter 3AC statements (Press Enter on an empty line to finish):")
+   stmts = []
+  
+   while True:
+       line = input("> ")
+       if not line.strip(): break
+       stmts.append(line)
+      
+   if not stmts:
+       print("[!] No input provided. Using default test case...")
+       stmts = ["t = a - b", "u = a - c", "v = t + u", "d = v + u"]
+      
+   generate_code(stmts)
+
+
+—---------------------------------------------------------------------------------------—---------------------------------------------------------------------------------------
+Operator precedence 
+def table():
+   t = ['+', '-', '*', '/', 'id', '$']
+   rel = {
+       ('+', '+'): '>', ('+', '-'): '>', ('+', '*'): '<', ('+', '/'): '<', ('+', 'id'): '<', ('+', '$'): '>',
+       ('-', '+'): '>', ('-', '-'): '>', ('-', '*'): '<', ('-', '/'): '<', ('-', 'id'): '<', ('-', '$'): '>',
+       ('*', '+'): '>', ('*', '-'): '>', ('*', '*'): '>', ('*', '/'): '>', ('*', 'id'): '<', ('*', '$'): '>',
+       ('/', '+'): '>', ('/', '-'): '>', ('/', '*'): '>', ('/', '/'): '>', ('/', 'id'): '<', ('/', '$'): '>',
+       ('id', '+'): '>', ('id', '-'): '>', ('id', '*'): '>', ('id', '/'): '>', ('id', '$'): '>',
+       ('$', '+'): '<', ('$', '-'): '<', ('$', '*'): '<', ('$', '/'): '<', ('$', 'id'): '<', ('$', '$'): 'acc'
+   }
+   return t, rel
+
+
+
+
+def parse(exp):
+   t, rel = table()
+   stack = ['$']
+   exp = exp + '$'
+
+
+   tokens = []
+   i = 0
+   while i < len(exp):
+       if exp[i:i+2] == 'id':
+           tokens.append('id')
+           i += 2
+       else:
+           tokens.append(exp[i])
+           i += 1
+
+
+   print("\nStack\t\tInput\t\tAction")
+   print("-" * 40)
+
+
+   while tokens:
+       top = next((x for x in reversed(stack) if x in t), '$')
+       cur = tokens[0]
+
+
+       print("".join(stack), "\t\t", "".join(tokens), "\t", end="")
+
+
+       if top == '$' and cur == '$':
+           print("Accept")
+           break
+
+
+       action = rel.get((top, cur), '-')
+
+
+       if action == '<':
+           stack.append(tokens.pop(0))
+           print("Shift")
+
+
+       elif action == '>':
+           if stack[-1] == 'id':
+               stack.pop()
+               stack.append('E')
+               print("Reduce: id->E")
+           elif len(stack) >= 3:
+               op = stack[-2]
+               stack[-3:] = ['E']
+               print(f"Reduce: E {op} E -> E")
+
+
+       else:
+           print("Error")
+           break
+
+
+
+
+exp = "id*id+id"
+parse(exp)
+—-------------------------—-------------------------—-------------------------—-------------------------—------------
+Code optimization 
+
+
+import re
+import os
+
+
+def optimize_code(lines):
+    result = []
+    aliases = {}       # Stores variable aliases (copy propagation)
+    expr_map = {}      # Stores expressions for reuse (CSE)
+
+
+    for line in lines:
+        line = line.strip()
+
+
+        # Skip empty lines or comments
+        if not line or line.startswith("//") or '=' not in line:
+            continue
+
+
+        lhs, rhs = map(str.strip, line.split('=', 1))
+
+
+        # --- 1. Copy Propagation ---
+        for var, val in aliases.items():
+            rhs = re.sub(rf'\b{var}\b', val, rhs)
+
+
+        # If RHS is just a variable → store alias and skip output
+        if re.fullmatch(r'[a-zA-Z_]\w*', rhs):
+            aliases[lhs] = rhs
+            continue
+
+
+        # --- 2. Constant Folding ---
+        if re.fullmatch(r'[\d\s+\-*/()]+', rhs):
+            try:
+                rhs = str(eval(rhs))
+            except:
+                pass  # Ignore invalid expressions safely
+
+
+        # --- 3. Common Subexpression Elimination ---
+        for expr in sorted(expr_map, key=len, reverse=True):
+            if expr in rhs:
+                rhs = rhs.replace(expr, expr_map[expr])
+
+
+        expr_map[rhs] = lhs
+        result.append(f"{lhs}={rhs}")
+
+
+    return result
+
+
+
+
+# --- Main Execution ---
+if __name__ == "__main__":
+    input_file = "spcc6input.txt"
+    output_file = "Output.txt"
+
+
+    if not os.path.exists(input_file):
+        print(f"Error: '{input_file}' not found.")
+    else:
+        with open(input_file) as f:
+            code = f.readlines()
+
+
+        print(f"--- Input ({input_file}) ---")
+        print("".join(line.strip() + "\n" for line in code))
+
+
+        optimized = optimize_code(code)
+
+
+        print("\n--- Optimized Output ---")
+        print("\n".join(optimized))
+
+
+        with open(output_file, "w") as f:
+            f.write("\n".join(optimized) + "\n")
+
+
+        print(f"\n[Success] Output saved to '{output_file}'")
+
+
+—---------------------------------------------—-------------------------—-------------------------—--------------------
+LEXICAL ANALYSIS 
+
+
+import re
+
+
+# -------- Lexical Analysis --------
+def lexer(expr):
+   tokens = []
+   sym = {}
+   count = 1
+
+
+   for t in re.findall(r'[a-zA-Z_]\w*|\d+\.\d+|\d+|[=+\-*()]', expr):
+       if t.isalpha():
+           if t not in sym:
+               sym[t] = count
+               count += 1
+           tokens.append(("ID", t))
+       elif t.isdigit():
+           tokens.append(("NUM", t))
+       else:
+           tokens.append(("OP", t))
+
+
+   return tokens, sym
+
+
+# -------- Main --------
+expr = input("Enter expression: ")
+
+
+tokens, sym = lexer(expr)
+
+
+print("\n1. Lexical Analysis")
+for t, val in tokens:
+   if t == "ID":
+       print(f"{val} -> <id,{sym[val]}>")
+   else:
+       print(f"{val} -> <{val}>")
+
+
+—---------------------------------------------------------------------------------------------------------------------
+SYNTAX ANALYSIS
+import re
+
+
+symbol_table = {'b': 'int', 'c': 'float'}
+
+
+class Node:
+    def __init__(self, v, l=None, r=None):
+        self.value, self.left, self.right = v, l, r
+
+
+# Added only this (no printing)
+def get_tokens(exp):
+    return re.findall(r'\d+|[a-zA-Z_]\w*|[=+\-*/()]', exp)
+
+
+def build_tree(tokens, p=0):
+    node = Node(tokens.pop(0))
+    prec = {'=':1,'+':2,'-':2,'*':3,'/':3}
+    while tokens and prec.get(tokens[0],0) >= p:
+        op = tokens.pop(0)
+        node = Node(op, node, build_tree(tokens, prec[op] + (op!='=')))
+    return node
+
+
+# unchanged
+def print_tree(n, level=0):
+    if level == 0:
+        print("\n--- SYNTAX TREE ---")
+    if not n: return
+    print_tree(n.right, level+1)
+    print("   " * level + str(n.value))
+    print_tree(n.left, level+1)
+
+
+if __name__ == "__main__":
+    root = build_tree(get_tokens(input("Enter Code: ") or "a=b*10/5"))
+    print_tree(root)
+—---------------------------------------------------------------------------------------------------------------------
+1 pass assembler:
+def assemble_interactive():
+
+
+    OPTAB = {
+        "STOP": ("IS", "00"), "ADD": ("IS", "01"), "SUB": ("IS", "02"),
+        "MULT": ("IS", "03"), "MOVER": ("IS", "04"), "MOVEM": ("IS", "05"),
+        "READ": ("IS", "09"), "PRINT": ("IS", "10"),
+        "START": ("AD", "01"), "END": ("AD", "02"),
+        "DS": ("DL", "02"), "DC": ("DL", "01")
+    }
+
+
+    REG = {"AREG": "1", "BREG": "2", "CREG": "3", "DREG": "4"}
+
+
+    print("Enter Assembly Code (END to stop):")
+    lines = []
+    while True:
+        line = input().upper().strip()
+        if not line: continue
+        lines.append(line.replace(',', ' '))
+        if "END" in line:
+            break
+
+
+    symtab = {}
+    ic = []
+    lc = 0
+
+
+    # -------- PASS 1 --------
+    for line in lines:
+        tokens = line.split()
+
+
+        # Label handling
+        if tokens[0] not in OPTAB:
+            symtab[tokens[0]] = lc
+            tokens = tokens[1:]
+
+
+        m = tokens[0]
+
+
+        if m == "START":
+            lc = int(tokens[1])
+            ic.append(f"(AD,01) (C,{lc})")
+
+
+        elif m == "END":
+            ic.append("(AD,02)")
+
+
+        elif m == "DS":
+            ic.append(f"{lc} (DL,02) (C,{tokens[1]})")
+            lc += int(tokens[1])
+
+
+        elif m in OPTAB:
+            entry = f"{lc} ({OPTAB[m][0]},{OPTAB[m][1]})"
+
+
+            for t in tokens[1:]:
+                if t in REG:
+                    entry += f" ({REG[t]})"
+                else:
+                    entry += f" (S,{t})"
+                    if t not in symtab:
+                        symtab[t] = None
+
+
+            ic.append(entry)
+            lc += 1
+
+
+    # -------- OUTPUT --------
+    print("\nSYMBOL TABLE")
+    for k, v in symtab.items():
+        print(k, "=", v)
+
+
+    print("\nINTERMEDIATE CODE")
+    for line in ic:
+        print(line)
+
+
+
+
+# MAIN
+assemble_interactive()
+—----------------------------------
+2pass macro
+MDT1, MDT2, MNT, ALA2 = [], [], [], []
+ALA1 = set()
+
+
+# Single reusable display function
+def display(title, header, data):
+    print(f"\n{title}\n{header}")
+    for i, d in enumerate(data, 1):
+        if isinstance(d, tuple): 
+            print(i, d[0], d[1])
+        else: 
+            print(i, d)
+
+
+# ================= PASS 1 =================
+def pass1(prog):
+    i = 0
+    while i < len(prog):
+        if prog[i].upper() == "MACRO":
+            i += 1
+            cleaned_header = prog[i].replace(",", " ")
+            parts = cleaned_header.split()
+            
+            # Store MNT as a tuple: (macro_name, mdt_index)
+            MNT.append((parts[0], len(MDT1) + 1))
+            ALA1.update(parts[1:])
+            
+            MDT1.append(cleaned_header)
+            i += 1
+            while prog[i].upper() != "MEND":
+                MDT1.append(prog[i])
+                i += 1
+            MDT1.append("MEND")
+        i += 1
+        
+    print("\n----- PASS 1 -----")
+    display("MNT", "Index\tName\tMDT_Index", MNT)
+    display("MDT", "Index\tMacro Definition", MDT1)
+    display("ALA (PASS 1)", "Index\tArgument", list(ALA1))
+
+
+# ================= PASS 2 =================
+def pass2(prog):
+    skip = False
+    for line in prog:
+        up_line = line.upper()
+        if up_line == "MACRO": skip = True; continue
+        if up_line == "MEND": skip = False; continue
+        if skip: continue
+
+
+        parts = line.replace(",", " ").split()
+        
+        # Find matching macro in MNT
+        mnt_entry = next((m for m in MNT if m[0].lower() == parts[0].lower()), None)
+        
+        if mnt_entry:
+            ptr = mnt_entry[1] - 1
+            header = MDT1[ptr].split()
+            
+            # Map parameters dynamically
+            mapping = dict(zip(header[1:], parts[1:]))
+            ALA2.extend(parts[1:len(header)])
+            
+            MDT2.append(line)
+            ptr += 1
+            while MDT1[ptr].upper() != "MEND":
+                stmt = MDT1[ptr]
+                for k, v in mapping.items():
+                    stmt = stmt.replace(k, v)
+                MDT2.append(stmt)
+                ptr += 1
+            MDT2.append("MEND")
+
+
+    print("\n----- PASS 2 -----")
+    display("MNT", "Index\tName\tMDT_Index", MNT)
+    display("MDT", "Index\tMacro Definition", MDT2)
+    display("ALA (PASS 2)", "Index\tArgument", ALA2)
+
+
+# ================= MAIN =================
+if __name__ == "__main__":
+    print("Paste your assembly code below (the program will execute when it reads 'END'):")
+    
+    source_code_lines = []
+    while True:
+        try:
+            line = input()
+            source_code_lines.append(line)
+            # Break the loop automatically when the END statement is reached
+            if line.strip().upper() == "END":
+                break
+        except EOFError:
+            # Also break if End-Of-File is triggered (Ctrl+D / Ctrl+Z)
+            break
+            
+    # Process the input lines, stripping whitespace and ignoring empty lines
+    prog = [line.strip() for line in source_code_lines if line.strip()]
+    
+    if prog:
+        pass1(prog)
+        pass2(prog)
+    else:
+        print("No input provided.")
+
+
+—---------------------------------------------------------------------
+1. Program to Create ‘C’ Library Using Macro to Find Factorial
+fact.h
+#ifndef FACT_H
+#define FACT_H
+
+
+int fact(int n);
+
+
+#endif
+fact.c
+#include <stdio.h>
+#include "fact.h"
+
+
+int fact(int n) {
+   int i, f = 1;
+   for(i = 1; i <= n; i++)
+       f *= i;
+   return f;
+}
+
+
+int main() {
+   int n;
+   scanf("%d", &n);
+   printf("Factorial = %d", fact(n));
+   return 0;
+}
+2. Program to Create ‘C’ Library Using Macros for Area of Square and Rectangle
+area.h
+#ifndef AREA_H
+#define AREA_H
+
+
+#define SQUARE(a) ((a)*(a))
+#define RECT(l,b) ((l)*(b))
+
+
+#endif
+area.c
+#include <stdio.h>
+#include "area.h"
+
+
+int main() {
+   int a, l, b;
+
+
+   scanf("%d", &a);
+   printf("Area of Square = %d\n", SQUARE(a));
+
+
+   scanf("%d %d", &l, &b);
+   printf("Area of Rectangle = %d", RECT(l,b));
+
+
+   return 0;
+}
+3. Program to Create ‘C’ Library Using Macro to Find Greatest of Two Numbers
+max2.h
+#ifndef MAX2_H
+#define MAX2_H
+
+
+#define MAX(a,b) ((a)>(b)?(a):(b))
+
+
+#endif
+max2.c
+#include <stdio.h>
+#include "max2.h"
+
+
+int main() {
+   int a, b;
+
+
+   scanf("%d %d", &a, &b);
+   printf("Greatest = %d", MAX(a,b));
+
+
+   return 0;
+}
+4. Program to Create ‘C’ Library to Print Factors of a Number
+factor.h
+#ifndef FACTOR_H
+#define FACTOR_H
+
+
+void factors(int n);
+
+
+#endif
+factor.c
+#include <stdio.h>
+#include "factor.h"
+
+
+void factors(int n) {
+   for(int i = 1; i <= n; i++)
+       if(n % i == 0)
+           printf("%d ", i);
+}
+
+
+int main() {
+   int n;
+
+
+   scanf("%d", &n);
+   printf("Factors: ");
+   factors(n);
+
+
+   return 0;
+}
+
+
+5. Program to Create ‘C’ Library Using Macro to Find Greatest of Three Numbers
+max3.h
+#ifndef MAX3_H
+#define MAX3_H
+
+
+#define MAX3(a,b,c) ((a>b && a>c)?a:(b>c?b:c))
+
+
+#endif
+max3.c
+#include <stdio.h>
+#include "max3.h"
+
+
+int main() {
+   int a, b, c;
+
+
+   scanf("%d %d %d", &a, &b, &c);
+   printf("Greatest = %d", MAX3(a,b,c));
+
+
+   return 0;
+}

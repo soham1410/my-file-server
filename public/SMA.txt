@@ -1,0 +1,239 @@
+1-WEB SCRAPING
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+url = "http://books.toscrape.com/"
+res = requests.get(url)
+soup = BeautifulSoup(res.text, "html.parser")
+
+books = soup.select("article.product_pod")
+
+data = [(b.h3.a["title"], 
+         b.select_one("p.price_color").text)
+        for b in books]
+
+df = pd.DataFrame(data, columns=["Book", "Price"])
+print(df)
+
+df.to_csv("books.csv", index=False)
+
+2-DEGREE CENTRALITY
+https://snap.stanford.edu/data/facebook_combined.txt.gz
+
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# load dataset file
+G_full = nx.read_edgelist("facebook_combined.txt")
+
+# reduce size for fast execution
+nodes = list(G_full.nodes())[:50]
+G = G_full.subgraph(nodes)
+
+# basic info
+print("Nodes:", G.number_of_nodes())
+print("Edges:", G.number_of_edges())
+print("Density:", round(nx.density(G), 4))
+
+# degree
+deg = dict(G.degree())
+
+# centrality
+dc = nx.degree_centrality(G)
+bc = nx.betweenness_centrality(G)
+cc = nx.closeness_centrality(G)
+ec = nx.eigenvector_centrality(G, max_iter=1000)
+
+top5 = lambda x: sorted(x.items(), key=lambda i: i[1], reverse=True)[:5]
+
+print("Top Degree:", top5(dc))
+print("Top Betweenness:", top5(bc))
+print("Top Closeness:", top5(cc))
+print("Top Eigenvector:", top5(ec))
+
+# visualization
+pos = nx.spring_layout(G, seed=1)
+
+nx.draw(
+    G, pos,
+    node_size=[deg[n]*100 for n in G],
+    node_color=list(dc.values()),
+    cmap=plt.cm.plasma,
+    with_labels=True
+)
+
+plt.title("Facebook Network (50 Nodes)")
+plt.show()
+
+3-WORDCLOUD
+import pandas as pd
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud, STOPWORDS
+import string
+
+# load dataset Fake and real news dataset Kaggle
+df = pd.read_csv("Fake.csv")
+
+# handle missing
+df["title"] = df["title"].fillna("")
+df["text"] = df["text"].fillna("")
+
+# combine text
+text = " ".join((df["title"] + " " + df["text"]).tolist()).lower()
+
+# clean text
+for ch in string.punctuation:
+    text = text.replace(ch, " ")
+
+words = [w for w in text.split() if w not in STOPWORDS and len(w) > 3]
+clean_text = " ".join(words)
+
+# wordcloud
+wc = WordCloud(width=800, height=400, background_color="white").generate(clean_text)
+
+plt.imshow(wc)
+plt.axis("off")
+plt.title("Word Cloud")
+plt.show()
+
+
+4-Cleaning
+
+import pandas as pd
+
+# load dataset (Tweets.csv (tweets us airline) from Kaggle)
+df = pd.read_csv("Tweets.csv")
+
+# keep only required columns and rename
+df = df[["text", "airline_sentiment"]].rename(columns={"airline_sentiment": "sentiment"})
+
+# cleaning
+df["text"] = (
+    df["text"]
+    .str.lower()
+    .str.replace(r"http\S+|www\S+", "", regex=True)
+    .str.replace(r"@\w+|#", "", regex=True)
+    .str.replace(r"[^a-z\s]", "", regex=True)
+    .str.replace(r"\s+", " ", regex=True)
+    .str.strip()
+)
+
+# remove nulls and duplicates
+df = df.dropna().drop_duplicates(subset="text")
+
+print(df.head())
+
+# save cleaned data
+df.to_csv("cleaned_airline_sentiment.csv", index=False)
+
+5-EDA AND VIS
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# load dataset Students Performance in Exams from kabble whenamancodes
+df = pd.read_csv("exams.csv")
+
+print(df.head())
+
+# ---------------- EDA ----------------
+print("Shape:", df.shape)
+print("Data Types:\n", df.dtypes)
+print("Mean:\n", df.mean(numeric_only=True))
+print("Median:\n", df.median(numeric_only=True))
+print("Mode:\n", df.mode().iloc[0])
+print("Variance:\n", df.var(numeric_only=True))
+print("Std Dev:\n", df.std(numeric_only=True))
+print("Min:\n", df.min(numeric_only=True))
+print("Max:\n", df.max(numeric_only=True))
+print("Missing:\n", df.isnull().sum())
+
+corr = df.corr(numeric_only=True)
+
+# ---------------- Plots ----------------
+
+# use correct column names
+plt.hist(df["math score"], bins=20)
+plt.title("Math Score Distribution")
+plt.show()
+
+sns.boxplot(x=df["math score"])
+plt.title("Math Boxplot")
+plt.show()
+
+plt.scatter(df["math score"], df["reading score"])
+plt.title("Math vs Reading")
+plt.show()
+
+plt.plot(df["math score"].head(50))
+plt.title("Math Trend")
+plt.show()
+
+means = df[["math score","reading score","writing score"]].mean()
+means.plot(kind="bar")
+plt.title("Average Scores")
+plt.show()
+
+means.plot(kind="pie", autopct="%1.1f%%")
+plt.title("Score Share")
+plt.ylabel("")
+plt.show()
+
+corr = df[["math score","reading score","writing score"]].corr()
+sns.heatmap(corr, annot=True)
+plt.title("Correlation")
+plt.show()
+
+sns.violinplot(data=df[["math score","reading score","writing score"]])
+plt.title("Score Distribution")
+plt.show()
+
+sns.pairplot(df[["math score","reading score","writing score"]])
+plt.show()
+
+df["level"] = pd.cut(df["math score"], bins=[0,50,70,100], labels=["Low","Medium","High"])
+sns.countplot(x=df["level"])
+plt.title("Math Level Count")
+plt.show()
+
+6-COMPARE
+import pandas as pd
+import matplotlib.pyplot as plt
+from textblob import TextBlob
+import re
+
+# load dataset AMAZON FINE FOODS  REVIEW
+df = pd.read_csv("Reviews.csv")
+
+# take small sample
+reviews = df["Text"].dropna().astype(str).head(2000)
+
+# clean
+def clean(t):
+    t = re.sub(r"http\S+|[^a-zA-Z ]", "", t)
+    return t.lower()
+
+reviews = [clean(t) for t in reviews]
+
+# sentiment
+def get_sentiment(t):
+    s = TextBlob(t).sentiment.polarity
+    return "Positive" if s>0 else "Negative" if s<0 else "Neutral"
+
+result = {"Positive":0,"Negative":0,"Neutral":0}
+
+for r in reviews:
+    result[get_sentiment(r)] += 1
+
+print(result)
+
+# graph
+pd.Series(result).plot(kind="bar")
+plt.title("Sentiment Analysis")
+plt.xlabel("Sentiment")
+plt.ylabel("Count")
+plt.show()
+
+
+

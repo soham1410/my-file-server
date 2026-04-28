@@ -1,0 +1,334 @@
+# ==========================================
+# 1. SENTIMENT ANALYSIS
+# ==========================================
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load dataset (keep file in same folder as this script)
+df = pd.read_csv("Tweets.csv")
+
+# Clean data
+df = df.dropna()
+
+# Detect text column
+if "text" in df.columns:
+    text_col = "text"
+else:
+    text_col = df.columns[0]
+
+# Feature creation
+df["tweet"] = df[text_col].astype(str).str.lower()
+df["tweet_length"] = df["tweet"].str.len()
+
+# Sentiment classification
+positive = df["tweet"].str.contains("good|great|love|happy|excellent|best|amazing", na=False)
+negative = df["tweet"].str.contains("bad|worst|hate|angry|poor|terrible", na=False)
+
+df["sentiment"] = "Neutral"
+df.loc[positive, "sentiment"] = "Positive"
+df.loc[negative, "sentiment"] = "Negative"
+
+# Count sentiments
+counts = df["sentiment"].value_counts()
+
+# Plot sentiment distribution
+plt.bar(counts.index, counts.values)
+plt.xlabel("Sentiment")
+plt.ylabel("Count")
+plt.title("Tweet Sentiment Analysis")
+plt.show()
+
+# Tweet length analysis
+print("\n--- Average Tweet Length by Sentiment ---")
+print(df.groupby("sentiment")["tweet_length"].mean())
+
+# Sample output
+print("\n--- Sample Data ---")
+print(df[[text_col, "sentiment"]].head())
+
+# ==========================================
+# 2. NETWORK CENTRALITY
+# ==========================================
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# Load dataset (edge list)
+G = nx.read_edgelist("facebook_combined.txt")
+
+print("Dataset Loaded Successfully")
+
+# Degree of first 20 nodes
+print("\n--- DEGREE OF FIRST 20 NODES ---")
+degrees = dict(G.degree())
+for i, (node, degree) in enumerate(degrees.items()):
+    if i >= 20:
+        break
+    print(f"Node {node}: {degree}")
+
+# Draw small subgraph (for speed)
+plt.figure(figsize=(12, 10))
+small_G = G.subgraph(list(G.nodes())[:100])
+pos = nx.spring_layout(small_G, seed=42)
+
+nx.draw(
+    small_G,
+    pos,
+    with_labels=True,
+    node_size=500,
+    node_color="blue",
+    edge_color="black",
+    font_size=8,
+    alpha=0.8
+)
+
+plt.title("Facebook Network Visualization (Subgraph)")
+plt.axis('off')
+plt.show()
+
+# Basic network info
+print("\n--- BASIC NETWORK INFO ---")
+print("Number of Nodes:", G.number_of_nodes())
+print("Number of Edges:", G.number_of_edges())
+print("Network Density:", nx.density(G))
+
+# Hub nodes
+print("\n--- HUB NODES ---")
+sorted_nodes = sorted(G.degree, key=lambda x: x[1], reverse=True)[:15]
+for node, degree in sorted_nodes:
+    print(node, "Degree:", degree)
+
+# Degree centrality
+deg_cent = nx.degree_centrality(G)
+sorted_deg = sorted(deg_cent.items(), key=lambda x: x[1], reverse=True)[:15]
+print("\n--- DEGREE CENTRALITY ---")
+for node, value in sorted_deg:
+    print(node, ":", round(value, 3))
+
+# Betweenness centrality (optimized)
+print("\nComputing Betweenness Centrality...")
+bet_cent = nx.betweenness_centrality(G, k=100)
+sorted_bet = sorted(bet_cent.items(), key=lambda x: x[1], reverse=True)[:15]
+print("\n--- BETWEENNESS CENTRALITY ---")
+for node, value in sorted_bet:
+    print(node, ":", round(value, 3))
+
+# Closeness centrality
+close_cent = nx.closeness_centrality(G)
+sorted_close = sorted(close_cent.items(), key=lambda x: x[1], reverse=True)[:15]
+print("\n--- CLOSENESS CENTRALITY ---")
+for node, value in sorted_close:
+    print(node, ":", round(value, 3))
+
+# Eigenvector centrality
+eig_cent = nx.eigenvector_centrality(G, max_iter=1000)
+sorted_eig = sorted(eig_cent.items(), key=lambda x: x[1], reverse=True)[:15]
+print("\n--- EIGENVECTOR CENTRALITY ---")
+for node, value in sorted_eig:
+    print(node, ":", round(value, 3))
+
+# ==========================================
+# 3. WORD CLOUD
+# ==========================================
+import pandas as pd
+import numpy as np
+import re
+import nltk
+from nltk.corpus import stopwords
+from textblob import TextBlob
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+
+nltk.download('stopwords')
+
+df = pd.read_csv("Tweets.csv")
+df = df[['text']]
+df.dropna(inplace=True)
+
+df['clean_text'] = df['text'].str.lower()
+df['clean_text'] = df['clean_text'].apply(lambda x: re.sub(r"http\S+|www\S+", "", x))
+df['clean_text'] = df['clean_text'].apply(lambda x: re.sub(r"@\w+|#", "", x))
+df['clean_text'] = df['clean_text'].apply(lambda x: re.sub(r"[^a-z\s]", "", x))
+df['clean_text'] = df['clean_text'].apply(lambda x: re.sub(r"\s+", " ", x).strip())
+
+stop_words = set(stopwords.words('english'))
+df['cleaned_text'] = df['clean_text'].apply(lambda x: " ".join([w for w in x.split() if w not in stop_words]))
+
+def get_sentiment(text):
+    polarity = TextBlob(text).sentiment.polarity
+    if polarity > 0:
+        return "Positive"
+    elif polarity < 0:
+        return "Negative"
+    else:
+        return "Neutral"
+
+df['sentiment'] = df['cleaned_text'].apply(get_sentiment)
+sentiment_counts = df['sentiment'].value_counts()
+
+plt.figure()
+plt.pie(sentiment_counts, labels=sentiment_counts.index, autopct='%1.1f%%')
+plt.title("Sentiment Distribution")
+plt.show()
+
+all_words = " ".join(df['cleaned_text'])
+
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(all_words)
+
+plt.figure()
+plt.imshow(wordcloud)
+plt.axis('off')
+plt.title("Word Cloud")
+plt.show()
+
+# ==========================================
+# 4. EDA AND VISUALIZATION
+# ==========================================
+from google.colab import files
+# uploaded = files.upload() # Uncomment if running in Google Colab
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('FB.csv')
+print(df.head())
+
+print("===== EDA =====")
+
+num = df.select_dtypes(include='number')
+print("\nMean:\n",num.mean())
+print("\nMedian:\n", num.median())
+print("\nMode:\n", num.mode().iloc[0])
+print("\nVariance:\n", num.var())
+print("\nStandard Deviation:\n", num.std())
+print("\nMax:\n", num.max())
+print("\nMin:\n", num.min())
+
+print("\nMissing Values:\n", df.isnull().sum())
+print("\nUnique Values:\n", df.nunique())
+print("\nCorrelation:\n", num.corr())
+
+sns.histplot(df["Close"], kde=True)
+plt.title("Close Price Distribution")
+plt.show()
+
+plt.plot(df["Volume"], df["Close"])
+plt.title("Close Price Over Volume")
+plt.xticks(rotation=45)
+plt.show()
+
+sns.scatterplot(x="Open", y="Close", data=df)
+plt.title("Open vs Close")
+plt.show()
+
+df.head(10).plot(x="Date", y="Volume", kind="bar")
+plt.title("Volume (First 10 Days)")
+plt.xticks(rotation=45)
+plt.show()
+
+sns.heatmap(df.corr(numeric_only=True), annot=True)
+plt.title("Correlation Heatmap")
+plt.show()
+
+# Create categories based on Close price
+df["price_category"] = pd.cut(
+    df["Close"],
+    bins=3,
+    labels=["Low", "Medium", "High"]
+)
+
+# Count each category
+price_count = df["price_category"].value_counts()
+
+# Pie chart
+plt.pie(price_count, labels=price_count.index, autopct="%1.1f%%")
+plt.title("Stock Price Categories")
+plt.show()
+
+
+# ==========================================
+# 5. DATA PREPROCESSING AND SCALING
+# ==========================================
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
+df = pd.read_csv('social_media_posts.csv')
+
+print("ORIGINAL DATA:\n", df.head())
+
+df.columns = df.columns.str.lower()
+print("\n1. Column Renamed:\n", df.head())
+
+df.drop_duplicates(inplace=True)
+print("\n2. After Removing Duplicates:\n", df.head())
+
+for col in df.select_dtypes(include=np.number):
+    df[col].fillna(df[col].median(), inplace=True)
+df.fillna('unknown', inplace=True)
+print("\n3. After Handling Missing Values:\n", df.head())
+
+df['likes_scaled'] = MinMaxScaler().fit_transform(df[['likes']])
+print("\n4. After Normalization:\n", df[['likes','likes_scaled']].head())
+
+df['shares_scaled'] = StandardScaler().fit_transform(df[['shares']])
+print("\n5. After Standardization:\n", df[['shares','shares_scaled']].head())
+
+Q1, Q3 = df['likes'].quantile([0.25, 0.75])
+IQR = Q3 - Q1
+df = df[(df['likes'] >= Q1 - 1.5*IQR) & (df['likes'] <= Q3 + 1.5*IQR)]
+print("\n6. After Outlier Removal:\n", df.head())
+
+df['category'] = df['category'].astype(str).str.lower()
+print("\n7. After Lowercase:\n", df[['category']].head())
+
+df['engagement_score'] = df['likes'] + df['shares'] + df['comments']
+print("\n8. After Feature Extraction:\n", df[['likes','shares','comments','engagement_score']].head())
+
+# ==========================================
+# 6. DATA CLEANING
+# ==========================================
+import pandas as pd
+import re
+from tabulate import tabulate
+
+df = pd.read_csv("social_media_posts.csv")
+
+print("\nORIGINAL DATASET\n")
+print(tabulate(df, headers="keys", tablefmt="grid", showindex=False))
+
+steps = [
+    ("1 LOWERCASE CONVERSION", lambda x: str(x).lower()),
+    ("2 EMOJI REMOVAL", lambda x: re.sub(r"[^\x00-\x7F]+", "", x)),
+    ("3 SPECIAL CHARACTER REMOVAL", lambda x: re.sub(r"[^a-zA-Z0-9\s]", "", x)),
+    ("4 WHITESPACE NORMALIZATION", lambda x: re.sub(r"\s+", " ", x).strip())
+]
+
+for title, func in steps:
+    df["Category"] = df["Category"].apply(func)
+    print(f"\n{title}\n")
+    print(tabulate(df[["PostID", "Category"]], headers="keys", tablefmt="grid", showindex=False))
+
+print("\n6 DUPLICATE ROW DETECTION\n")
+
+duplicates = df[df.duplicated()]
+
+if not duplicates.empty:
+    print("DUPLICATE ROW(S) IDENTIFIED AND REMOVED:\n")
+    print(tabulate(duplicates, headers="keys", tablefmt="grid", showindex=False))
+else:
+    print("No duplicate rows found.")
+
+df = df.drop_duplicates()
+
+print("\nDATASET AFTER DUPLICATE REMOVAL\n")
+print(tabulate(df, headers="keys", tablefmt="grid", showindex=False))
+
+df["Engagement_Score"] = df["Likes"] + df["Comments"]
+
+print("\nFEATURE EXTRACTION - ENGAGEMENT SCORE\n")
+print(tabulate(df[["PostID", "Likes", "Comments", "Engagement_Score"]], headers="keys", tablefmt="grid", showindex=False))
+
+df.to_csv("cleaned_social_media_data.csv", index=False)
+
+print("\nDATA PREPROCESSING COMPLETED SUCCESSFULLY")

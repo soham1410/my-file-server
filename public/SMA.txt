@@ -237,3 +237,60 @@ plt.show()
 
 
 
+EXP 10-To develop social media text analytics models for improving existing products/services.
+DATASET LINK:- https://www.kaggle.com/datasets/kundanbedmutha/customer-sentiment-dataset
+
+import pandas as pd
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import NMF
+
+FILE_NAME  = 'Customer_Sentiment.csv'
+TEXT_COL   = 'review_text'
+RATING_COL = 'customer_rating'
+SEP        = "=" * 60
+
+# ── Load ──────────────────────────────────────────────────────
+print("Loading dataset...")
+try:
+    df = pd.read_csv(FILE_NAME)
+except FileNotFoundError:
+    raise SystemExit(f"\nERROR: '{FILE_NAME}' not found. Place it in the same folder as this script.")
+
+# ── Task 1: Isolate negative reviews ─────────────────────────
+neg = df[df[RATING_COL] <= 2].dropna(subset=[TEXT_COL])
+
+print(f"\n{SEP}\nTASK 1: ANALYZING NEGATIVE REVIEWS\n{SEP}")
+print(f"Total rows in full dataset: {len(df)}")
+print(f"Total negative reviews isolated for analysis: {len(neg)}\n")
+print("Sample of negative reviews being analyzed:")
+for text in neg[TEXT_COL].head(3):
+    print(f" - {str(text)[:100]}...")
+
+# ── Tasks 2 & 3: CountVectorizer + NMF ───────────────────────
+print(f"\n{SEP}\nTASK 2 & 3: TEXT ANALYTICS MODEL & FEATURE EXTRACTION\n{SEP}")
+print("Running Count Vectorization and NMF Topic Modeling...\n")
+
+vec      = CountVectorizer(stop_words='english', max_df=0.9, min_df=2)
+matrix   = vec.fit_transform(neg[TEXT_COL].astype(str))
+vocab    = vec.get_feature_names_out()
+nmf      = NMF(n_components=3, random_state=42).fit(matrix)
+findings = [", ".join(vocab[i] for i in topic.argsort()[:-6:-1])
+            for topic in nmf.components_]
+
+print("Identified Product Features/Areas receiving negative feedback:")
+print("-" * 50)
+for i, kw in enumerate(findings, 1):
+    print(f"Problem Area {i}:\n   Keywords detected: [{kw}]\n")
+
+# ── Task 4: Conclusion ────────────────────────────────────────
+print(f"{SEP}\nTASK 4: CONCLUSION AND SUGGESTED IMPROVEMENTS\n{SEP}")
+print("FINDINGS:")
+print("Based on the NLP topic modeling of negative sentiment data, the model identified the following core defects through keyword clustering:")
+for i, kw in enumerate(findings, 1):
+    print(f"{i}. Issue Cluster {i} relates to: {kw}")
+
+print("\nSUGGESTED PRODUCT IMPROVEMENTS (Based on extracted keywords):")
+print("* Engineering & QA: Investigate the physical hardware or system components associated with the most frequent keywords in Cluster 1.")
+print("* Software & Development: Address the functional complaints and bugs highlighted by the keyword groupings in Cluster 2 and 3.")
+print("* Customer Support: Create targeted FAQs and troubleshooting guides for users experiencing the specific pain points identified above.")
+print(SEP)
